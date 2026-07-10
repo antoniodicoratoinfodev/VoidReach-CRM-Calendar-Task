@@ -101,7 +101,10 @@ public class MainController {
     private static final double MIN_TIMELINE_WIDTH = 320.0;
 
     private double dragAnchorY;
+    private double dragAnchorX;
     private double dragInitialTop;
+    private int dragTargetDayOffset;
+    private boolean draggingTask;
     private double currentZoom = DEFAULT_ZOOM;
     private PauseTransition calendarResizeDebounce;
     private boolean calendarOpening;
@@ -524,6 +527,13 @@ public class MainController {
         taskDatabase.computeIfAbsent(date, k -> new ArrayList<>()).add(task);
     }
 
+    private void removeTaskFromDatabase(LocalDate date, Task task) {
+        List<Task> tasks = taskDatabase.get(date);
+        if (tasks == null) return;
+        tasks.remove(task);
+        if (tasks.isEmpty()) taskDatabase.remove(date);
+    }
+
     private void loadUserData() {
         loadingUserData = true;
         try {
@@ -757,22 +767,47 @@ public class MainController {
             updateTimeLabel(timeLabel, task.getStartMin(), task.getDuration());
             dragAnchorY = e.getScreenY(); updateRightSidebar(); e.consume();
         });
+        resizer.setOnMouseReleased(e -> { saveCurrentData(); e.consume(); });
         
         taskBox.setOnMousePressed(e -> {
             if (e.getButton() == MouseButton.PRIMARY) {
-                dragAnchorY = e.getSceneY(); dragInitialTop = AnchorPane.getTopAnchor(taskBox);
+                dragAnchorY = e.getSceneY(); dragAnchorX = e.getSceneX(); dragInitialTop = AnchorPane.getTopAnchor(taskBox);
+                dragTargetDayOffset = dayOffset;
+                draggingTask = true;
                 taskBox.getStyleClass().add("task-entry-dragging"); taskBox.toFront();
             }
         });
         taskBox.setOnMouseDragged(e -> {
-            if (e.getButton() == MouseButton.PRIMARY) {
+            if (e.isPrimaryButtonDown()) {
                 double deltaY = e.getSceneY() - dragAnchorY;
                 task.setStartMin(Math.max(0, (int)((dragInitialTop + deltaY) / zoomedMinuteHeight)));
                 AnchorPane.setTopAnchor(taskBox, task.getStartMin() * zoomedMinuteHeight);
+                if (currentViewMode.equals("Week")) {
+                    double dayWidth = getTimelineWidth() / 7.0;
+                    double horizontalPosition = dayOffset * dayWidth + (e.getSceneX() - dragAnchorX);
+                    dragTargetDayOffset = Math.max(0, Math.min(6, (int) Math.floor((horizontalPosition + dayWidth / 2) / dayWidth)));
+                    AnchorPane.setLeftAnchor(taskBox, dragTargetDayOffset * dayWidth + margin);
+                }
                 updateTimeLabel(timeLabel, task.getStartMin(), task.getDuration());
             }
         });
-        taskBox.setOnMouseReleased(e -> { taskBox.getStyleClass().remove("task-entry-dragging"); updateRightSidebar(); saveCurrentData(); });
+        taskBox.setOnMouseReleased(e -> {
+            if (!draggingTask) return;
+            draggingTask = false;
+            taskBox.getStyleClass().remove("task-entry-dragging");
+            if (currentViewMode.equals("Week")) {
+                LocalDate sourceDate = weekStartDate.plusDays(dayOffset);
+                LocalDate targetDate = weekStartDate.plusDays(dragTargetDayOffset);
+                if (!sourceDate.equals(targetDate)) {
+                    removeTaskFromDatabase(sourceDate, task);
+                    addTaskToDatabase(targetDate, task);
+                    selectCalendarDate(targetDate);
+                    return;
+                }
+            }
+            updateRightSidebar();
+            saveCurrentData();
+        });
         taskBox.setFocusTraversable(true);
         taskBox.setOnMouseClicked(e -> {
             taskBox.requestFocus();
@@ -784,7 +819,7 @@ public class MainController {
         taskBox.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.BACK_SPACE || e.getCode() == KeyCode.DELETE) {
                 LocalDate date = currentViewMode.equals("Day") ? calendarDatePicker.getValue() : weekStartDate.plusDays(dayOffset);
-                taskDatabase.getOrDefault(date, new ArrayList<>()).remove(task);
+                removeTaskFromDatabase(date, task);
                 setupMainCalendar(); updateRightSidebar(); saveCurrentData();
             }
         });
@@ -888,21 +923,24 @@ public class MainController {
         TextField sM = new TextField(String.format("%02d", startMin % 60)); sM.setPrefWidth(50);
         TextField eH = new TextField(String.format("%02d", (startMin + duration) / 60)); eH.setPrefWidth(50);
         TextField eM = new TextField(String.format("%02d", (startMin + duration) % 60)); eM.setPrefWidth(50);
+        LocalDate sourceDate = calendarDatePicker.getValue();
+        DatePicker taskDatePicker = new DatePicker(sourceDate);
         ComboBox<String> colorPicker = new ComboBox<>(FXCollections.observableArrayList("Blue", "Red", "Green", "Yellow", "Orange", "Purple"));
         colorPicker.setValue(existingTask != null ? existingTask.getColor() : "Blue");
 
         grid.add(new Label("Title:"), 0, 0); grid.add(titleField, 1, 0);
-        grid.add(new Label("Start (H:M):"), 0, 1); grid.add(new HBox(5, sH, new Label(":"), sM), 1, 1);
-        grid.add(new Label("End (H:M):"), 0, 2); grid.add(new HBox(5, eH, new Label(":"), eM), 1, 2);
-        grid.add(new Label("Color:"), 0, 3); grid.add(colorPicker, 1, 3);
-        grid.add(new Label("Description:"), 0, 4); grid.add(descField, 1, 4);
+        grid.add(new Label("Date:"), 0, 1); grid.add(taskDatePicker, 1, 1);
+        grid.add(new Label("Start (H:M):"), 0, 2); grid.add(new HBox(5, sH, new Label(":"), sM), 1, 2);
+        grid.add(new Label("End (H:M):"), 0, 3); grid.add(new HBox(5, eH, new Label(":"), eM), 1, 3);
+        grid.add(new Label("Color:"), 0, 4); grid.add(colorPicker, 1, 4);
+        grid.add(new Label("Description:"), 0, 5); grid.add(descField, 1, 5);
         dialog.getDialogPane().setContent(grid);
 
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent()) {
-            LocalDate date = calendarDatePicker.getValue();
+            LocalDate dateToDisplay = sourceDate;
             if (result.get() == deleteButton && existingTask != null) {
-                taskDatabase.get(date).remove(existingTask);
+                removeTaskFromDatabase(sourceDate, existingTask);
             } else if (result.get() == saveButton) {
                 try {
                     int sh = Integer.parseInt(sH.getText().trim());
@@ -910,17 +948,22 @@ public class MainController {
                     int eh = Integer.parseInt(eH.getText().trim());
                     int em = Integer.parseInt(eM.getText().trim());
                     if (sh < 0 || sh > 23 || sm < 0 || sm > 59 || eh < 0 || eh > 23 || em < 0 || em > 59) throw new NumberFormatException();
-                    
-                    if (existingTask != null) taskDatabase.get(date).remove(existingTask);
+                    LocalDate targetDate = taskDatePicker.getValue();
+                    if (targetDate == null) {
+                        showError("Invalid Date", "Please choose a date for the activity.");
+                        return;
+                    }
+
+                    if (existingTask != null) removeTaskFromDatabase(sourceDate, existingTask);
                     int ns = sh * 60 + sm; int ne = eh * 60 + em;
-                    addTaskToDatabase(date, new Task(titleField.getText(), descField.getText(), ns, Math.max(5, ne - ns), colorPicker.getValue()));
+                    addTaskToDatabase(targetDate, new Task(titleField.getText(), descField.getText(), ns, Math.max(5, ne - ns), colorPicker.getValue()));
+                    dateToDisplay = targetDate;
                 } catch (NumberFormatException ex) {
                     showError("Invalid Time", "Please enter valid hours (0-23) and minutes (0-59).");
                     return;
                 }
             }
-            setupMainCalendar(); updateRightSidebar();
-            saveCurrentData();
+            selectCalendarDate(dateToDisplay);
         }
     }
 
