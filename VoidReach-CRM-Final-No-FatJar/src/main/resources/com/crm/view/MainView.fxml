@@ -17,6 +17,9 @@
             <!-- App icon removed from sidebar as requested -->
             
             <VBox fx:id="sidebarContainer" spacing="10" alignment="CENTER">
+                <Button fx:id="sideHomeBtn" onAction="#handleNavigation" styleClass="sidebar-button">
+                    <graphic><FontIcon iconLiteral="fas-home" iconSize="18" iconColor="white"/></graphic>
+                </Button>
                 <Button fx:id="sideDashboardBtn" onAction="#handleNavigation" styleClass="sidebar-button">
                     <graphic><FontIcon iconLiteral="fas-th-large" iconSize="18" iconColor="white"/></graphic>
                 </Button>
@@ -57,38 +60,19 @@
         <VBox>
             <!-- Navbar -->
             <HBox fx:id="navbarContainer" styleClass="navbar" spacing="25" alignment="CENTER_LEFT">
-                <Button fx:id="navHomeBtn" onAction="#handleNavigation" text="Home" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-home"/></graphic>
-                </Button>
-                <Button fx:id="navDashboardBtn" onAction="#handleNavigation" text="Dashboard" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-columns"/></graphic>
-                </Button>
-                <Button fx:id="navContactsBtn" onAction="#handleNavigation" text="Contacts" styleClass="nav-link, nav-link-active">
-                    <graphic><FontIcon iconLiteral="fas-user-friends"/></graphic>
-                </Button>
-                <Button fx:id="navCalendarBtn" onAction="#handleNavigation" text="Calendar" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-calendar-alt"/></graphic>
-                </Button>
-                <Button fx:id="navLeadsBtn" onAction="#handleNavigation" text="Leads" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-paper-plane"/></graphic>
-                </Button>
-                <Button fx:id="navOpportunitiesBtn" onAction="#handleNavigation" text="Opportunities" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-chart-line"/></graphic>
-                </Button>
-                <Button fx:id="navAccountsBtn" onAction="#handleNavigation" text="Accounts" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-briefcase"/></graphic>
-                </Button>
-                <Button fx:id="navTasksBtn" onAction="#handleNavigation" text="Tasks" styleClass="nav-link">
-                    <graphic><FontIcon iconLiteral="fas-list-ul"/></graphic>
-                </Button>
-                
                 <Region HBox.hgrow="ALWAYS"/>
                 
                 <HBox spacing="15" alignment="CENTER">
                     <FontIcon iconLiteral="fas-question-circle" iconSize="16" iconColor="#94a3b8"/>
                     <FontIcon iconLiteral="fas-bell" iconSize="16" iconColor="#94a3b8"/>
-                    <Label text="User 1" style="-fx-font-weight: 600;"/>
-                    <Circle radius="14" fill="#cbd5e1"/>
+                    <Button fx:id="accountMenuButton" onAction="#handleAccountMenu" styleClass="account-menu-button">
+                        <graphic>
+                            <HBox spacing="6" alignment="CENTER">
+                                <Label fx:id="currentUserLabel" text="Utente" style="-fx-font-weight: 600;"/>
+                                <FontIcon iconLiteral="fas-user-circle" iconSize="27" iconColor="#cbd5e1"/>
+                            </HBox>
+                        </graphic>
+                    </Button>
                 </HBox>
             </HBox>
 

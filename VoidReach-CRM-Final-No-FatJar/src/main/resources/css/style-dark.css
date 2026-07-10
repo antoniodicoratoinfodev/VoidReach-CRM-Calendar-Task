@@ -517,3 +517,57 @@
     -fx-stroke: #334155;
     -fx-stroke-width: 1;
 }
+
+/* Authentication */
+.auth-page {
+    -fx-background-color: linear-gradient(to bottom right, #0f172a, #172554, #111827);
+    -fx-padding: 35;
+}
+.auth-card {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 16;
+    -fx-padding: 32;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.38), 24, 0.18, 0, 8);
+}
+.auth-brand { -fx-text-fill: #f8fafc; -fx-font-size: 23px; -fx-font-weight: 800; }
+.auth-title { -fx-text-fill: #f8fafc; -fx-font-size: 20px; -fx-font-weight: 700; }
+.auth-subtitle { -fx-text-fill: #94a3b8; -fx-font-size: 13px; }
+.auth-card .text-field, .auth-card .password-field {
+    -fx-background-color: #0f172a;
+    -fx-text-fill: #f8fafc;
+    -fx-prompt-text-fill: #64748b;
+    -fx-border-color: #334155;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 10 12;
+}
+.auth-card .text-field:focused, .auth-card .password-field:focused { -fx-border-color: #3b82f6; }
+.auth-primary { -fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 16; -fx-background-radius: 6; -fx-cursor: hand; }
+.auth-primary:hover { -fx-background-color: #1d4ed8; }
+.auth-card .hyperlink { -fx-text-fill: #60a5fa; -fx-border-color: transparent; }
+.auth-message { -fx-text-fill: #fca5a5; -fx-font-size: 12px; }
+.auth-checkbox { -fx-text-fill: #cbd5e1; -fx-font-size: 12px; }
+.auth-checkbox .box { -fx-background-color: #0f172a; -fx-border-color: #475569; }
+.auth-checkbox:selected .mark { -fx-background-color: white; }
+.auth-checkbox:selected .box { -fx-background-color: #2563eb; }
+
+.account-menu-button { -fx-background-color: #1e293b; -fx-padding: 5 8; -fx-cursor: hand; -fx-background-radius: 18; }
+.account-menu-button:hover { -fx-background-color: #334155; }
+
+/* Account context menu */
+.context-menu {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 8;
+    -fx-border-color: #334155;
+    -fx-border-radius: 8;
+    -fx-padding: 5;
+}
+.context-menu .menu-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 5;
+    -fx-padding: 8 12;
+}
+.context-menu .menu-item .label { -fx-text-fill: #e2e8f0; }
+.context-menu .menu-item:focused { -fx-background-color: #334155; }
+.context-menu .menu-item:focused .label { -fx-text-fill: #ffffff; }
+.context-menu .separator .line { -fx-border-color: #334155; -fx-border-width: 1 0 0 0; }

@@ -2,6 +2,12 @@
 
 VoidReach is a desktop CRM, calendar, and task management application built with Java and JavaFX, featuring a modern and clean interface designed for professional use. The project is actively under development and will be expanded with new features and modules over time.
 
+## Local access
+
+The app includes registration, login, password recovery, and password update. Accounts are stored locally in `~/.voidreach-crm/users.properties`; passwords are never stored in plain text (PBKDF2). In this local demo, the reset code is shown in the application and expires after 15 minutes.
+
+Persistence goes through `UserRepository`; a future JDBC implementation can replace `LocalUserRepository` while mapping the same `UserAccount` fields to a SQL `users` table.
+
 ---
 
 ## Screenshots

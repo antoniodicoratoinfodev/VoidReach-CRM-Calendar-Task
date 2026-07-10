@@ -2,6 +2,10 @@ package com.crm.controller;
 
 import com.crm.model.Contact;
 import com.crm.model.Task;
+import com.crm.model.UserAccount;
+import com.crm.repository.LocalUserRepository;
+import com.crm.service.AuthService;
+import javafx.geometry.Side;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -49,6 +53,8 @@ public class MainController {
     @FXML private HBox navbarContainer;
     @FXML private Button themeToggleBtn;
     @FXML private FontIcon themeToggleIcon;
+    @FXML private Label currentUserLabel;
+    @FXML private Button accountMenuButton;
     
     @FXML private AnchorPane timeLabelsContainer;
     @FXML private AnchorPane calendarTimelineArea;
@@ -83,6 +89,70 @@ public class MainController {
     
     private Map<LocalDate, List<Task>> taskDatabase = new HashMap<>();
     private YearMonth currentMiniMonth;
+    private Runnable logoutAction;
+    private UserAccount currentUser;
+    private final AuthService authService = new AuthService(new LocalUserRepository());
+
+    public void setCurrentUser(UserAccount user, Runnable logoutAction) {
+        this.currentUser = user;
+        this.logoutAction = logoutAction;
+        if (currentUserLabel != null) currentUserLabel.setText(user.getFullName());
+    }
+
+    @FXML private void handleLogout() {
+        if (logoutAction != null) logoutAction.run();
+    }
+
+    @FXML private void handleAccountMenu() {
+        if (currentUser == null) return;
+        MenuItem profile = new MenuItem("Profilo e dati account");
+        profile.setOnAction(e -> showProfileDialog());
+        MenuItem security = new MenuItem("Sicurezza: cambia password");
+        security.setOnAction(e -> showChangePasswordDialog());
+        MenuItem logout = new MenuItem("Esci dall'account");
+        logout.setOnAction(e -> handleLogout());
+        ContextMenu menu = new ContextMenu(profile, security, new SeparatorMenuItem(), logout);
+        menu.show(accountMenuButton, Side.BOTTOM, 0, 6);
+    }
+
+    private void showProfileDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>(); dialog.setTitle("Profilo e account");
+        applyThemeToDialog(dialog);
+        ButtonType save = new ButtonType("Salva", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
+        GridPane grid = new GridPane(); grid.setHgap(10); grid.setVgap(12);
+        TextField name = new TextField(currentUser.getFullName());
+        TextField email = new TextField(currentUser.getEmail()); email.setEditable(false);
+        grid.addRow(0, new Label("Nome:"), name);
+        grid.addRow(1, new Label("Email:"), email);
+        dialog.getDialogPane().setContent(grid);
+        if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
+            try { authService.updateProfile(currentUser, name.getText()); currentUserLabel.setText(currentUser.getFullName()); }
+            catch (IllegalArgumentException ex) { showError("Profilo non aggiornato", ex.getMessage()); }
+        }
+    }
+
+    private void showChangePasswordDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>(); dialog.setTitle("Cambia password");
+        applyThemeToDialog(dialog);
+        ButtonType save = new ButtonType("Aggiorna password", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
+        GridPane grid = new GridPane(); grid.setHgap(10); grid.setVgap(12);
+        PasswordField current = new PasswordField(); current.setPromptText("Password attuale");
+        PasswordField next = new PasswordField(); next.setPromptText("Minimo 8 caratteri");
+        PasswordField confirm = new PasswordField(); confirm.setPromptText("Ripeti la nuova password");
+        grid.addRow(0, new Label("Password attuale:"), current);
+        grid.addRow(1, new Label("Nuova password:"), next);
+        grid.addRow(2, new Label("Conferma password:"), confirm);
+        dialog.getDialogPane().setContent(grid);
+        if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
+            try {
+                if (!next.getText().equals(confirm.getText())) throw new IllegalArgumentException("Le password non coincidono.");
+                authService.changePassword(currentUser, current.getText(), next.getText());
+                showInfo("Password aggiornata", "La password del tuo account è stata aggiornata.");
+            } catch (IllegalArgumentException ex) { showError("Password non aggiornata", ex.getMessage()); }
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -637,6 +707,15 @@ public class MainController {
         alert.showAndWait();
     }
 
+    private void showInfo(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        applyThemeToDialog(alert);
+        alert.showAndWait();
+    }
+
     @FXML private void handleNavigation(ActionEvent event) {
         Button clickedBtn = (Button) event.getSource();
         updateActiveStyles(clickedBtn);
@@ -648,7 +727,8 @@ public class MainController {
         else if (btnId.contains("Calendar")) calendarView.setVisible(true);
         else {
             genericView.setVisible(true);
-            if (btnId.contains("Dashboard")) { genericTitle.setText("Dashboard"); genericIcon.setIconLiteral("fas-th-large"); }
+            if (btnId.contains("Home")) { genericTitle.setText("Home"); genericIcon.setIconLiteral("fas-home"); }
+            else if (btnId.contains("Dashboard")) { genericTitle.setText("Dashboard"); genericIcon.setIconLiteral("fas-th-large"); }
             else if (btnId.contains("Leads")) { genericTitle.setText("Leads"); genericIcon.setIconLiteral("fas-bullseye"); }
             else if (btnId.contains("Deals") || btnId.contains("Opportunities")) { genericTitle.setText("Opportunities"); genericIcon.setIconLiteral("fas-handshake"); }
             else if (btnId.contains("Accounts")) { genericTitle.setText("Accounts"); genericIcon.setIconLiteral("fas-building"); }

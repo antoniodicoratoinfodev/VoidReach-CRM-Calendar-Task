@@ -5,6 +5,11 @@ import java.awt.Toolkit;
 import java.util.concurrent.CompletableFuture;
 
 import com.crm.controller.SplashScreenController;
+import com.crm.controller.LoginController;
+import com.crm.controller.MainController;
+import com.crm.model.UserAccount;
+import com.crm.repository.LocalUserRepository;
+import com.crm.service.SessionService;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -28,6 +33,8 @@ public class Main extends Application {
     private Stage splashStage;
     private SplashScreenController splashController;
     private Parent mainRoot;
+    private LoginController loginController;
+    private final SessionService sessionService = new SessionService(new LocalUserRepository());
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -63,16 +70,17 @@ public class Main extends Application {
                 updateProgress(0.1, 1.0);
                 Thread.sleep(400); 
 
-                // 2. UI Resource Loading
-                updateMessage("Loading UI Resources...");
+                // 2. Authentication UI loading
+                updateMessage("Loading access screen...");
                 updateProgress(0.3, 1.0);
-                FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/com/crm/view/MainView.fxml"));
-                Parent root = mainLoader.load();
+                FXMLLoader loginLoader = new FXMLLoader(getClass().getResource("/com/crm/view/LoginView.fxml"));
+                Parent root = loginLoader.load();
+                loginController = loginLoader.getController();
                 updateProgress(0.6, 1.0);
                 Thread.sleep(300);
 
                 // 3. Database and Model Setup
-                updateMessage("Database Synchronization...");
+                updateMessage("Preparing local account storage...");
                 updateProgress(0.8, 1.0);
                 Thread.sleep(400);
 
@@ -90,17 +98,17 @@ public class Main extends Application {
 
         loadTask.setOnSucceeded(e -> {
             this.mainRoot = loadTask.getValue();
-            transitionToMainApp();
+            transitionToLogin();
         });
 
         new Thread(loadTask).start();
     }
 
-    private void transitionToMainApp() {
+    private void transitionToLogin() {
         if (mainRoot == null) return;
 
         // 1. Main Stage Setup
-        mainStage.setTitle("VoidReach CRM");
+        mainStage.setTitle("VoidReach CRM — Accesso");
         mainStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app-icon.png")));
         
         Scene scene = new Scene(mainRoot);
@@ -108,7 +116,10 @@ public class Main extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/style-dark.css").toExternalForm());
         
         mainStage.setScene(scene);
-        mainStage.setMaximized(true);
+        mainStage.setMaximized(false);
+        mainStage.setWidth(580);
+        mainStage.setHeight(700);
+        mainStage.centerOnScreen();
         mainStage.setOpacity(0.0); // Fully invisible at start
         mainStage.show();
 
@@ -130,6 +141,12 @@ public class Main extends Application {
         transitionTimeline.setOnFinished(e -> {
             splashStage.close();
             setupOSIcons();
+            loginController.setOnAuthenticated((user, remember) -> {
+                if (remember) sessionService.remember(user);
+                else sessionService.forget();
+                showMainApplication(user);
+            });
+            sessionService.getRememberedUser().ifPresent(this::showMainApplication);
         });
 
         // 4. Synchronized Execution (Optimized for macOS/Windows/Linux)
@@ -142,6 +159,41 @@ public class Main extends Application {
                 } catch (InterruptedException ignored) {}
             }).start();
         });
+    }
+
+    private void showMainApplication(UserAccount user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/crm/view/MainView.fxml"));
+            Parent root = loader.load();
+            MainController controller = loader.getController();
+            controller.setCurrentUser(user, this::logout);
+            Scene scene = new Scene(root);
+            scene.setFill(Color.web("#0f172a"));
+            scene.getStylesheets().add(getClass().getResource("/css/style-dark.css").toExternalForm());
+            mainStage.setTitle("VoidReach CRM");
+            mainStage.setScene(scene);
+            mainStage.setMaximized(true);
+            mainStage.show();
+        } catch (Exception e) {
+            throw new IllegalStateException("Impossibile aprire l'applicazione", e);
+        }
+    }
+
+    private void showLoginScreen() {
+        mainStage.setTitle("VoidReach CRM — Accesso");
+        Scene loginScene = new Scene(mainRoot);
+        loginScene.setFill(Color.web("#0f172a"));
+        loginScene.getStylesheets().add(getClass().getResource("/css/style-dark.css").toExternalForm());
+        mainStage.setScene(loginScene);
+        mainStage.setMaximized(false);
+        mainStage.setWidth(580);
+        mainStage.setHeight(700);
+        mainStage.centerOnScreen();
+    }
+
+    private void logout() {
+        sessionService.forget();
+        showLoginScreen();
     }
 
     private void setupOSIcons() {
