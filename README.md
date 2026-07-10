@@ -2,11 +2,18 @@
 
 VoidReach is a desktop CRM, calendar, and task management application built with Java and JavaFX, featuring a modern and clean interface designed for professional use. The project is actively under development and will be expanded with new features and modules over time.
 
-## Local access
+## Local access and persistence
 
-The app includes registration, login, password recovery, and password update. Accounts are stored locally in `~/.voidreach-crm/users.properties`; passwords are never stored in plain text (PBKDF2). In this local demo, the reset code is shown in the application and expires after 15 minutes.
+The app includes registration, login, password recovery, password update, and an optional remembered session. Local files are stored under the current user's `.voidreach-crm` directory:
 
-Persistence goes through `UserRepository`; a future JDBC implementation can replace `LocalUserRepository` while mapping the same `UserAccount` fields to a SQL `users` table.
+- `users.properties` stores account data;
+- `data/<account-id>.properties` stores that account's contacts, tasks, selected calendar date, view mode, and zoom level;
+- `avatars/<account-id>.png` stores the cropped profile image, when one is set;
+- `session.properties` stores only the remembered account email.
+
+Passwords and reset codes are never stored in plain text: they are derived with PBKDF2. In this local demo, the reset code is shown in the application and expires after 15 minutes.
+
+Persistence is separated behind `UserRepository` and `CrmDataRepository`; future JDBC implementations can replace the local repositories while preserving account-scoped data.
 
 ---
 
@@ -21,10 +28,10 @@ Persistence goes through `UserRepository`; a future JDBC implementation can repl
 ## Features
 
 ### Contact Management
-- **Contact Table** — displays contacts with the following fields: Name, Company, Job Title, Email, Phone, Last Interaction, and Tag.
-- **Add Contact** — create new contacts via a dedicated dialog with all fields and tag assignment.
-- **Edit Contact** — double-click any row to open the edit dialog and modify any field.
-- **Delete Contact** — select a contact and press `Delete` or `Backspace`; a confirmation dialog prevents accidental deletions.
+- **Contact Table** — displays Name, Company, Job Title, Email, Phone, Last Interaction, and Tags.
+- **Add Contact** — create contacts through a dedicated dialog with name, company, job title, email, phone, tags, and description. Last Interaction is set automatically for new contacts.
+- **Edit Contact** — double-click a row to change its editable details.
+- **Select and delete contacts** — select one or more contacts, then press `Delete` or `Backspace`; a confirmation dialog prevents accidental deletions.
 - **Color-coded Tags** — contacts can be labeled as **Client**, **Tech**, or **Follow-up**, each rendered with a distinct color badge.
 
 ### Search & Filtering
@@ -35,7 +42,7 @@ Persistence goes through `UserRepository`; a future JDBC implementation can repl
 - Live pagination info label showing the current range and total contacts (e.g. *Showing 1–15 of 103 Contacts*).
 
 ### Calendar & Task Management
-- **Day-view timeline** with a full 24-hour grid, divided into hours and 15-minute intervals.
+- **Day and Week views** with a full 24-hour grid, divided into hours and 15-minute intervals.
 - **Create tasks** by clicking on any time slot on the timeline.
 - **Drag & drop tasks** to reschedule them by moving them along the timeline.
 - **Resize tasks** by dragging the bottom handle of any task block.
@@ -51,8 +58,13 @@ Persistence goes through `UserRepository`; a future JDBC implementation can repl
 ### Theme
 - **Dark / Light mode toggle** — switch between themes at any time; the button icon updates accordingly.
 
+### Account
+- **Remember me** — optionally reopen the last authenticated account on the next launch without storing a password.
+- **Profile avatar** — choose, crop, and save a profile image locally for each account.
+
 ### Navigation
 The left sidebar provides access to all sections:
+- **Home** *(coming soon)*
 - **Dashboard** *(coming soon)*
 - **Contacts** — fully implemented
 - **Calendar** — fully implemented
@@ -85,7 +97,7 @@ Or use the provided script:
 ./run.sh
 ```
 
-The project can also be opened and run directly from IntelliJ IDEA.
+The Maven module `VoidReach-CRM-Final-No-FatJar` can also be opened and run directly from IntelliJ IDEA.
 
 ---
 
@@ -98,25 +110,38 @@ VoidReach-CRM-Final-No-FatJar/
 └── src/
     └── main/
         ├── java/
-        │   └── com/
+        │   └── com/crm/
         │       ├── app/
-        │       │   ├── AppLauncher.java    # Launcher wrapper
-        │       │   └── Main.java           # JavaFX entry point
+        │       │   ├── AppLauncher.java             # Launcher wrapper
+        │       │   └── Main.java                    # JavaFX entry point and navigation
         │       ├── controller/
-        │       │   ├── MainController.java # All UI logic
-        │       │   └── SplashScreen.java   # Splash screen controller
-        │       └── model/
-        │           └── Contact.java        # Contact data model
+        │       │   ├── LoginController.java         # Authentication views
+        │       │   ├── MainController.java          # CRM, calendar, and UI logic
+        │       │   └── SplashScreenController.java  # Splash screen controller
+        │       ├── model/
+        │       │   ├── Contact.java
+        │       │   ├── CrmDataSnapshot.java
+        │       │   ├── Task.java
+        │       │   └── UserAccount.java
+        │       ├── repository/
+        │       │   ├── CrmDataRepository.java
+        │       │   ├── LocalCrmDataRepository.java
+        │       │   ├── LocalUserRepository.java
+        │       │   └── UserRepository.java
+        │       └── service/
+        │           ├── AuthService.java
+        │           ├── AvatarService.java
+        │           └── SessionService.java
         └── resources/
-            └── com/
-                ├── view/
-                │   ├── MainView.fxml       # Main UI layout
-                │   └── SplashScreen.fxml   # Splash screen layout
-                ├── css/
-                │   ├── style-dark.css      # Dark theme
-                │   └── style.css           # Light theme
-                └── images/
-                    └── app-icon.png        # Application icon
+            ├── com/crm/view/
+            │   ├── LoginView.fxml          # Login, registration, and recovery
+            │   ├── MainView.fxml           # Main UI layout
+            │   └── SplashScreen.fxml       # Splash screen layout
+            ├── css/
+            │   ├── style-dark.css          # Dark theme
+            │   └── style.css               # Light theme
+            └── images/
+                └── app-icon.png            # Application icon
 ```
 
 ---
