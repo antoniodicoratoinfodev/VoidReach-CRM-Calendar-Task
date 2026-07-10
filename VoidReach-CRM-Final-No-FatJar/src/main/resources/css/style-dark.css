@@ -544,8 +544,6 @@
 }
 .contact-select-check:selected .box { -fx-background-color: #2563eb; -fx-border-color: #60a5fa; }
 .contact-select-check:selected .mark { -fx-background-color: white; }
-.table-row-cell:cut-contact { -fx-opacity: 0.55; }
-
 /* Account context menu */
 .context-menu {
     -fx-background-color: #1e293b;

@@ -14,7 +14,6 @@ import javafx.geometry.Side;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.css.PseudoClass;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -121,8 +120,6 @@ public class MainController {
     private boolean loadingUserData;
     private boolean contactSelectionMode;
     private final Set<Contact> checkedContacts = new HashSet<>();
-    private final Set<Contact> cutContacts = new HashSet<>();
-    private static final PseudoClass CUT_CONTACT = PseudoClass.getPseudoClass("cut-contact");
 
     public void setCurrentUser(UserAccount user, Runnable logoutAction) {
         this.currentUser = user;
@@ -266,13 +263,23 @@ public class MainController {
         grid.addRow(1, new Label("Nuova password:"), next);
         grid.addRow(2, new Label("Conferma password:"), confirm);
         dialog.getDialogPane().setContent(grid);
-        if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
-            try {
-                if (!next.getText().equals(confirm.getText())) throw new IllegalArgumentException("Le password non coincidono.");
-                authService.changePassword(currentUser, current.getText(), next.getText());
-                showInfo("Password aggiornata", "La password del tuo account è stata aggiornata.");
-            } catch (IllegalArgumentException ex) { showError("Password non aggiornata", ex.getMessage()); }
+        boolean passwordChanged = false;
+        String errorMessage = null;
+        try {
+            if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
+                try {
+                    if (!next.getText().equals(confirm.getText())) throw new IllegalArgumentException("Le password non coincidono.");
+                    authService.changePassword(currentUser, current.getText(), next.getText());
+                    passwordChanged = true;
+                } catch (IllegalArgumentException ex) { errorMessage = ex.getMessage(); }
+            }
+        } finally {
+            current.clear();
+            next.clear();
+            confirm.clear();
         }
+        if (passwordChanged) showInfo("Password aggiornata", "La password del tuo account è stata aggiornata.");
+        else if (errorMessage != null) showError("Password non aggiornata", errorMessage);
     }
 
     @FXML
@@ -311,9 +318,7 @@ public class MainController {
         
         contactsTable.setOnKeyPressed(event -> {
             if (isShortcut(event, KeyCode.C)) {
-                copySelectedContacts(false); event.consume();
-            } else if (isShortcut(event, KeyCode.X)) {
-                copySelectedContacts(true); event.consume();
+                copySelectedContacts(); event.consume();
             } else if (event.getCode() == KeyCode.DELETE || event.getCode() == KeyCode.BACK_SPACE) {
                 handleDeleteContact();
             }
@@ -525,7 +530,6 @@ public class MainController {
             CrmDataSnapshot data = crmDataRepository.loadForUser(currentUser.getId());
             contactData.setAll(data.contacts());
             checkedContacts.clear();
-            cutContacts.clear();
             taskDatabase.clear();
             data.tasksByDate().forEach((date, tasks) -> taskDatabase.put(date, new ArrayList<>(tasks)));
             currentZoom = clamp(data.calendarZoom(), MIN_ZOOM, MAX_ZOOM);
@@ -593,12 +597,7 @@ public class MainController {
 
     private void setupContactRowFactory() {
         contactsTable.setRowFactory(tv -> {
-            TableRow<Contact> row = new TableRow<>() {
-                @Override protected void updateItem(Contact item, boolean empty) {
-                    super.updateItem(item, empty);
-                    pseudoClassStateChanged(CUT_CONTACT, !empty && cutContacts.contains(item));
-                }
-            };
+            TableRow<Contact> row = new TableRow<>();
             row.setOnMouseClicked(event -> { if (!contactSelectionMode && event.getClickCount() == 2 && (!row.isEmpty())) showContactDialog(row.getItem()); });
             return row;
         });
@@ -981,7 +980,7 @@ public class MainController {
         selectContactsBtn.setText(contactSelectionMode ? "Done" : "Select");
         contactsTable.getSelectionModel().setSelectionMode(contactSelectionMode ? SelectionMode.MULTIPLE : SelectionMode.SINGLE);
         if (!contactSelectionMode) {
-            checkedContacts.clear(); cutContacts.clear(); contactsTable.getSelectionModel().clearSelection();
+            checkedContacts.clear(); contactsTable.getSelectionModel().clearSelection();
         }
         contactsTable.refresh();
     }
@@ -996,7 +995,7 @@ public class MainController {
         return new ArrayList<>(selected);
     }
 
-    private void copySelectedContacts(boolean cut) {
+    private void copySelectedContacts() {
         List<Contact> selected = getSelectedContacts();
         if (selected.isEmpty()) return;
         StringBuilder text = new StringBuilder("Name\tCompany\tTitle\tEmail\tPhone\tTags\tDescription\n");
@@ -1010,8 +1009,6 @@ public class MainController {
                     .append(clipboardValue(contact.descriptionProperty().get())).append('\n');
         }
         ClipboardContent content = new ClipboardContent(); content.putString(text.toString()); Clipboard.getSystemClipboard().setContent(content);
-        if (cut) { cutContacts.clear(); cutContacts.addAll(selected); }
-        contactsTable.refresh();
     }
 
     private String clipboardValue(String value) { return value == null ? "" : value.replace('\t', ' ').replace('\n', ' '); }
@@ -1024,7 +1021,7 @@ public class MainController {
             alert.setHeaderText(selected.size() == 1 ? "Delete " + selected.get(0).nameProperty().get() + "?" : "Delete " + selected.size() + " contacts?");
             alert.setContentText("This action cannot be undone.");
             if (alert.showAndWait().filter(r -> r == ButtonType.OK).isPresent()) {
-                contactData.removeAll(selected); checkedContacts.removeAll(selected); cutContacts.removeAll(selected);
+                contactData.removeAll(selected); checkedContacts.removeAll(selected);
                 contactsTable.getSelectionModel().clearSelection(); updatePagination(); saveCurrentData();
             }
         }

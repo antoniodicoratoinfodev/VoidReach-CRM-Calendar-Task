@@ -123,6 +123,7 @@ public class Main extends Application {
 
     private void transitionToLogin() {
         if (loginRoot == null) return;
+        loginController.resetForLoginScreen();
 
         // 1. Main Stage Setup
         mainStage.setTitle("VoidReach CRM — Accesso");
@@ -184,6 +185,8 @@ public class Main extends Application {
 
     private void showLoginScreen() {
         mainStage.setTitle("VoidReach CRM — Accesso");
+        // The login scene is retained for the application's lifetime; reset its form state on every logout.
+        loginController.resetForLoginScreen();
         configureLoginHandler();
         Scene loginScene = new Scene(loginRoot);
         loginScene.setFill(Color.web("#0f172a"));
