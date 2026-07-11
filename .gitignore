@@ -1,7 +1,22 @@
+# Build output
+target/
 /VoidReach-CRM-Final-No-FatJar/target/
+build/
+out/
+*.class
 
-# macOS metadata
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+
+# OS metadata
 .DS_Store
+Thumbs.db
 
 # IDE metadata
 .idea/
+*.iml
+.vscode/
