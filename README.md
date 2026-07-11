@@ -1,151 +1,181 @@
 # VoidReach
 
-VoidReach is a desktop CRM, calendar, and task management application built with Java and JavaFX, featuring a modern and clean interface designed for professional use. The project is actively under development and will be expanded with new features and modules over time.
+VoidReach is a desktop CRM application developed with Java 21 and JavaFX. It currently provides local contact, calendar, and activity management, account authentication, and persistent data storage on the user's computer.
 
-## Local access and persistence
+> Current status: the **Contacts** and **Calendar** sections are operational. The other navigation items are present in the interface but still display an “under development” placeholder.
 
-The app includes registration, login, password recovery, password update, and an optional remembered session. Local files are stored under the current user's `.voidreach-crm` directory:
+## Available Features
 
-- `users.properties` stores account data;
-- `data/<account-id>.properties` stores that account's contacts, tasks, selected calendar date, view mode, and zoom level;
-- `avatars/<account-id>-<version>.png` stores the current lossless cropped profile image, when one is set;
-- `session.properties` stores only the remembered account email.
+### Account and Authentication
 
-Passwords and reset codes are never stored in plain text: they are derived with PBKDF2. In this local demo, the reset code is shown in the application and expires after 15 minutes.
+- Registration with name, email address, and a password of at least 8 characters.
+- Login and logout.
+- Password recovery through a six-digit code valid for 15 minutes. In this local version, the code is displayed directly in the application; no email is sent.
+- Password changes and name updates from the account menu.
+- **Stay signed in on this device** option: only the account email is stored, never the password.
+- Passwords and password-recovery codes are stored as PBKDF2-derived values with a salt.
 
-Persistence is separated behind `UserRepository` and `CrmDataRepository`; future JDBC implementations can replace the local repositories while preserving account-scoped data.
+### Contacts
 
----
+- Table showing name, company, job title, email, phone, last interaction, and tags.
+- Contact creation and editing through a dialog.
+- Available fields: name, company, job title, email, phone, tag, and description.
+- Available tags: `Client`, `Tech`, and `Follow-up`.
+- Real-time search by name, company, email, and description.
+- Pagination with 15, 25, 50, or 100 contacts, or all contacts.
+- Single or multiple selection and deletion with confirmation.
+- Double-click a row to edit a contact.
+- Copy selected contacts to the clipboard with `Ctrl+C` on Windows/Linux or `Cmd+C` on macOS.
+
+### Calendar
+
+- **Day** and **Week** views on a 24-hour grid with 15-minute intervals.
+- Create an activity by clicking on the timeline.
+- Edit activities with a double-click or right-click.
+- Reschedule activities with drag and drop.
+- Resize an activity by dragging its bottom edge.
+- Edit the date, start time, end time, description, and color.
+- Minimum duration of 5 minutes; activities must remain within the same day.
+- Available colors: `Blue`, `Red`, `Green`, `Yellow`, `Orange`, and `Purple`.
+- Navigate to the previous or next day and return to today.
+- Timeline zoom from 0.75x to 3x with `Ctrl`/`Cmd` + mouse wheel; `Ctrl+0`/`Cmd+0` resets the zoom.
+
+### Sidebar and Theme
+
+- Monthly mini-calendar with month navigation.
+- Selected day and current day highlighting.
+- List of activities for the selected day; clicking an activity opens the Calendar view.
+- Dark and light themes selectable from the sidebar.
+- Profile avatar support for PNG and JPG images, with preview, circular cropping, and zoom.
+
+### Sections Not Yet Implemented
+
+The **Home**, **Dashboard**, **Leads**, **Opportunities**, **Accounts**, **Tasks**, and **Settings** items are navigable but currently display a placeholder. **Tasks** is not a standalone section: activity management is integrated into the **Calendar**.
+
+The application does not currently include Google Calendar synchronization, a remote database, email delivery, or online multi-user management.
+
+## Local Persistence and Security
+
+Data is stored in the `.voidreach-crm` directory inside the user's home directory:
+
+```text
+~/.voidreach-crm/
+├── users.properties                         # accounts and derived credentials
+├── users.properties.bak                     # previous revision, when available
+├── session.properties                      # remembered-session email
+├── data/<account-id>.properties             # contacts, activities, and calendar preferences
+├── data/<account-id>.properties.bak         # atomic backup of the data file
+├── avatars/<account-id>-<uuid>.png          # cropped avatar saved as PNG
+└── backup/<account-id>/                     # automatic CRM data backups
+    └── crm-data-<timestamp>.properties      # up to 3 copies are retained
+```
+
+Primary saves are atomic. If a file is corrupted, the application attempts to recover the `.bak` revision. Unreadable records are isolated in files with the `.corrupt.properties` suffix instead of necessarily preventing all other data from being loaded.
+
+Avatars support PNG and JPG/JPEG images from 300×300 up to 20,000×20,000 pixels, with a maximum file size of 10 MB. Images are processed with memory limits and saved as a PNG master image up to 1024×1024 pixels.
+
+## Requirements
+
+- JDK 21 or newer
+- Apache Maven
+- An operating system with JavaFX support (macOS, Windows, or Linux)
+
+## Running the Application
+
+From the Maven module directory:
+
+```bash
+cd VoidReach-CRM-Final-No-FatJar
+mvn clean javafx:run
+```
+
+Alternatively, on macOS/Linux:
+
+```bash
+cd VoidReach-CRM-Final-No-FatJar
+./run.sh
+```
+
+The project can also be imported into IntelliJ IDEA as a Maven project by selecting the `pom.xml` file inside the `VoidReach-CRM-Final-No-FatJar` module.
+
+## Tests
+
+To run the unit tests:
+
+```bash
+cd VoidReach-CRM-Final-No-FatJar
+mvn test
+```
+
+The large-image integration test is separated into the `avatar-large-image` profile:
+
+```bash
+mvn verify -Pavatar-large-image
+```
+
+## Project Structure
+
+```text
+VoidReach-CRM-Calendar-Task/
+├── README.md
+├── LICENSE
+├── sample/
+│   ├── voidreachmac.png
+│   └── voidreachwindows.png
+├── agenda_icon_preview.png
+└── VoidReach-CRM-Final-No-FatJar/
+    ├── pom.xml
+    ├── run.sh
+    └── src/
+        ├── main/
+        │   ├── java/com/crm/
+        │   │   ├── app/
+        │   │   │   ├── AppLauncher.java            # Application launcher and configuration
+        │   │   │   └── Main.java                   # JavaFX entry point and transitions
+        │   │   ├── controller/
+        │   │   │   ├── LoginController.java         # Login, registration, and recovery
+        │   │   │   ├── MainController.java          # CRM, calendar, and account UI
+        │   │   │   └── SplashScreenController.java  # Splash screen
+        │   │   ├── model/
+        │   │   │   ├── Contact.java                 # Contact model
+        │   │   │   ├── CrmDataSnapshot.java         # Account data snapshot
+        │   │   │   ├── Task.java                    # Activity model
+        │   │   │   └── UserAccount.java             # Account model
+        │   │   ├── repository/
+        │   │   │   ├── AtomicPropertiesStore.java  # Atomic saves and .bak files
+        │   │   │   ├── CorruptRecordQuarantine.java # Corrupt-record isolation
+        │   │   │   ├── CrmBackupService.java        # Rotating automatic backups
+        │   │   │   ├── CrmDataRepository.java       # CRM data contract
+        │   │   │   ├── LocalCrmDataRepository.java  # Local CRM persistence
+        │   │   │   ├── LocalUserRepository.java     # Local account persistence
+        │   │   │   └── UserRepository.java          # Account persistence contract
+        │   │   └── service/
+        │   │       ├── AuthService.java             # Registration and authentication
+        │   │       ├── AvatarImageProcessor.java    # Avatar validation, cropping, and resizing
+        │   │       ├── AvatarService.java            # Avatar storage and loading
+        │   │       └── SessionService.java           # Remembered session
+        │   └── resources/
+        │       ├── com/crm/view/
+        │       │   ├── LoginView.fxml                # Authentication views
+        │       │   ├── MainView.fxml                 # Main layout
+        │       │   └── SplashScreen.fxml             # Splash-screen layout
+        │       ├── css/
+        │       │   ├── style.css                     # Light theme
+        │       │   └── style-dark.css                # Dark theme
+        │       └── images/
+        │           └── app-icon.png                  # Application icon
+        └── test/java/com/crm/
+            ├── model/                                # Task model tests
+            ├── repository/                           # Persistence and backup tests
+            └── service/                              # Avatar and image-processing tests
+```
 
 ## Screenshots
 
 | macOS | Windows |
-|-------|---------|
+|---|---|
 | ![VoidReach on macOS](sample/voidreachmac.png) | ![VoidReach on Windows](sample/voidreachwindows.png) |
-
----
-
-## Features
-
-### Contact Management
-- **Contact Table** — displays Name, Company, Job Title, Email, Phone, Last Interaction, and Tags.
-- **Add Contact** — create contacts through a dedicated dialog with name, company, job title, email, phone, tags, and description. Last Interaction is set automatically for new contacts.
-- **Edit Contact** — double-click a row to change its editable details.
-- **Select and delete contacts** — select one or more contacts, then press `Delete` or `Backspace`; a confirmation dialog prevents accidental deletions.
-- **Color-coded Tags** — contacts can be labeled as **Client**, **Tech**, or **Follow-up**, each rendered with a distinct color badge.
-
-### Search & Filtering
-- **Real-time search** across Name, Company, and Email fields — results update instantly as you type.
-
-### Pagination
-- Configurable rows per page: **15**, **25**, **50**, **100**, or **All**.
-- Live pagination info label showing the current range and total contacts (e.g. *Showing 1–15 of 103 Contacts*).
-
-### Calendar & Task Management
-- **Day and Week views** with a full 24-hour grid, divided into hours and 15-minute intervals.
-- **Create tasks** by clicking on any time slot on the timeline.
-- **Drag & drop tasks** to reschedule them by moving them along the timeline.
-- **Resize tasks** by dragging the bottom handle of any task block.
-- **Edit tasks** by double-clicking a task or right-clicking it — opens a dialog to modify title, start/end time, color, and description.
-- **Delete tasks** by selecting a task and pressing `Delete` or `Backspace`.
-- **Task colors** — Blue, Red, Green, Yellow, Orange, Purple.
-- **Date navigation** — previous day, next day, and jump-to-today buttons.
-
-### Right Sidebar
-- **Mini calendar** — monthly view with navigation arrows for month-by-month browsing; the selected day is highlighted in blue, today is outlined.
-- **Upcoming Activities** — list of tasks for the selected day, showing time slot and title. Clicking an activity navigates to the Calendar view.
-
-### Theme
-- **Dark / Light mode toggle** — switch between themes at any time; the button icon updates accordingly.
-
-### Account
-- **Remember me** — optionally reopen the last authenticated account on the next launch without storing a password.
-- **Profile avatar** — choose and crop a PNG/JPG from 300x300 up to 20000x20000 pixels (maximum upload 10 MB); the app creates a memory-bounded, high-quality local rendition for the current display scale.
-
-### Navigation
-The left sidebar provides access to all sections:
-- **Home** *(coming soon)*
-- **Dashboard** *(coming soon)*
-- **Contacts** — fully implemented
-- **Calendar** — fully implemented
-- **Leads** *(coming soon)*
-- **Opportunities** *(coming soon)*
-- **Accounts** *(coming soon)*
-- **Tasks** *(coming soon)*
-- **Settings** *(coming soon)*
-
----
-
-## Requirements
-
-- Java JDK 21 or higher
-- Apache Maven
-
----
-
-## How to Run
-
-Clone the repository and, from the `VoidReach-CRM-Final-No-FatJar` directory, run:
-
-```bash
-mvn clean javafx:run
-```
-
-Or use the provided script:
-
-```bash
-./run.sh
-```
-
-The Maven module `VoidReach-CRM-Final-No-FatJar` can also be opened and run directly from IntelliJ IDEA.
-
----
-
-## Project Structure
-
-```
-VoidReach-CRM-Final-No-FatJar/
-├── pom.xml
-├── run.sh
-└── src/
-    └── main/
-        ├── java/
-        │   └── com/crm/
-        │       ├── app/
-        │       │   ├── AppLauncher.java             # Launcher wrapper
-        │       │   └── Main.java                    # JavaFX entry point and navigation
-        │       ├── controller/
-        │       │   ├── LoginController.java         # Authentication views
-        │       │   ├── MainController.java          # CRM, calendar, and UI logic
-        │       │   └── SplashScreenController.java  # Splash screen controller
-        │       ├── model/
-        │       │   ├── Contact.java
-        │       │   ├── CrmDataSnapshot.java
-        │       │   ├── Task.java
-        │       │   └── UserAccount.java
-        │       ├── repository/
-        │       │   ├── CrmDataRepository.java
-        │       │   ├── LocalCrmDataRepository.java
-        │       │   ├── LocalUserRepository.java
-        │       │   └── UserRepository.java
-        │       └── service/
-        │           ├── AuthService.java
-        │           ├── AvatarService.java
-        │           └── SessionService.java
-        └── resources/
-            ├── com/crm/view/
-            │   ├── LoginView.fxml          # Login, registration, and recovery
-            │   ├── MainView.fxml           # Main UI layout
-            │   └── SplashScreen.fxml       # Splash screen layout
-            ├── css/
-            │   ├── style-dark.css          # Dark theme
-            │   └── style.css               # Light theme
-            └── images/
-                └── app-icon.png            # Application icon
-```
-
----
 
 ## License
 
-See [LICENSE](LICENSE) for terms of use.
+See [LICENSE](LICENSE) for the terms of use.
