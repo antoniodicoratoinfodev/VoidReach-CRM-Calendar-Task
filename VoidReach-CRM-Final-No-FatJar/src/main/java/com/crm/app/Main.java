@@ -18,7 +18,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.awt.Taskbar;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
+
 public class Main extends Application {
+
+    private static final String APP_ICON_PATH = "/images/app-icon.png";
 
     private Stage mainStage;
     private Stage splashStage;
@@ -32,6 +38,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         this.mainStage = primaryStage;
+        configureMacDockIcon();
         showSplashScreen();
     }
 
@@ -48,7 +55,7 @@ public class Main extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/style-dark.css").toExternalForm());
         splashStage.setScene(scene);
         
-        splashStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app-icon.png")));
+        addAppIcon(splashStage);
         splashStage.centerOnScreen();
         splashStage.show();
         splashStage.toFront();
@@ -127,7 +134,7 @@ public class Main extends Application {
 
         // 1. Main Stage Setup
         mainStage.setTitle("VoidReach CRM — Accesso");
-        mainStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app-icon.png")));
+        addAppIcon(mainStage);
         
         Scene scene = new Scene(loginRoot);
         scene.setFill(Color.web("#0f172a"));
@@ -144,7 +151,7 @@ public class Main extends Application {
     private void transitionToRememberedApp(Parent root) {
         if (root == null || rememberedAppController == null) return;
         mainStage.setTitle("VoidReach CRM");
-        mainStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/app-icon.png")));
+        addAppIcon(mainStage);
         rememberedAppController.setCurrentUser(rememberedUser, this::logout);
         Scene scene = new Scene(root);
         scene.setFill(Color.web("#0f172a"));
@@ -172,6 +179,7 @@ public class Main extends Application {
             scene.setFill(Color.web("#0f172a"));
             scene.getStylesheets().add(getClass().getResource("/css/style-dark.css").toExternalForm());
             mainStage.setTitle("VoidReach CRM");
+            addAppIcon(mainStage);
             mainStage.setScene(scene);
             mainStage.setMaximized(true);
             mainStage.show();
@@ -226,5 +234,26 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    private void addAppIcon(Stage stage) {
+        if (stage == null || stage.getIcons().isEmpty()) {
+            Image icon = new Image(getClass().getResourceAsStream(APP_ICON_PATH));
+            if (stage != null) stage.getIcons().add(icon);
+        }
+    }
+
+    private void configureMacDockIcon() {
+        if (!System.getProperty("os.name", "").toLowerCase().contains("mac")) return;
+        if (!Taskbar.isTaskbarSupported()) return;
+
+        Taskbar taskbar = Taskbar.getTaskbar();
+        if (!taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) return;
+
+        try (InputStream icon = getClass().getResourceAsStream(APP_ICON_PATH)) {
+            if (icon != null) taskbar.setIconImage(ImageIO.read(icon));
+        } catch (Exception ignored) {
+            // The JavaFX stage icon still applies if macOS does not allow changing the Dock icon.
+        }
     }
 }
