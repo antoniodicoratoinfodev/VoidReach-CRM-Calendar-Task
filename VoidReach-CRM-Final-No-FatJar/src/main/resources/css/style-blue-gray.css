@@ -157,6 +157,7 @@
 .notes-view, .notes-library, .note-editor { -fx-background-color: #182337; }
 .note-card, .markdown-toolbar, .note-typography-toolbar, .note-preview-settings { -fx-background-color: #202d42; -fx-border-color: #3a4960; }
 .note-card:hover { -fx-background-color: #26364d; -fx-border-color: #3f82ed; }
+.note-card-drop-target { -fx-background-color: #263c60; -fx-border-color: #70a4f5; }
 .note-card-title, .note-title-field { -fx-text-fill: #f3f5f9; }
 .note-card-excerpt { -fx-text-fill: #9ca9bc; }
 .note-card-format, .note-format-badge { -fx-background-color: #263c60; -fx-text-fill: #cfe0ff; }

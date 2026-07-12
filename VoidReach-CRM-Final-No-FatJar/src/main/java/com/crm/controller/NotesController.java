@@ -9,6 +9,7 @@ import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Clipboard;
@@ -413,14 +414,26 @@ public final class NotesController {
         card.setPrefWidth(250);
         card.setOnMouseClicked(event -> open(note));
         card.setOnDragDetected(event -> {
+            SnapshotParameters snapshotParameters = new SnapshotParameters();
+            snapshotParameters.setFill(Color.TRANSPARENT);
+            var dragImage = card.snapshot(snapshotParameters, null);
             Dragboard board = card.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent content = new ClipboardContent();
             content.put(NOTE_ID, note.getId());
             board.setContent(content);
+            board.setDragView(dragImage,
+                    Math.max(0, Math.min(event.getX(), dragImage.getWidth())),
+                    Math.max(0, Math.min(event.getY(), dragImage.getHeight())));
             card.getStyleClass().add("note-card-dragging");
             event.consume();
         });
         card.setOnDragDone(event -> card.getStyleClass().remove("note-card-dragging"));
+        card.setOnDragEntered(event -> {
+            if (event.getGestureSource() != card && event.getDragboard().hasContent(NOTE_ID)) {
+                card.getStyleClass().add("note-card-drop-target");
+            }
+        });
+        card.setOnDragExited(event -> card.getStyleClass().remove("note-card-drop-target"));
         card.setOnDragOver(event -> {
             if (event.getGestureSource() != card && event.getDragboard().hasContent(NOTE_ID)) {
                 event.acceptTransferModes(TransferMode.MOVE);
@@ -428,6 +441,7 @@ public final class NotesController {
             event.consume();
         });
         card.setOnDragDropped(event -> {
+            card.getStyleClass().remove("note-card-drop-target");
             Object draggedId = event.getDragboard().getContent(NOTE_ID);
             Note dragged = notes.stream().filter(candidate -> candidate.getId().equals(draggedId)).findFirst().orElse(null);
             if (dragged == null || dragged == note) { event.setDropCompleted(false); return; }

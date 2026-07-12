@@ -857,6 +857,7 @@
 }
 .note-card:hover { -fx-border-color: #93c5fd; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.13), 17, 0.1, 0, 5); }
 .note-card-dragging { -fx-opacity: 0.55; }
+.note-card-drop-target { -fx-border-color: #2563eb; -fx-border-width: 2; -fx-background-color: #eff6ff; }
 .note-card-icon { -fx-icon-color: #2563eb; }
 .note-drag-handle { -fx-icon-color: #94a3b8; -fx-cursor: move; }
 .note-card-format, .note-format-badge {
