@@ -290,17 +290,21 @@ public final class AccountController {
         progressIndicator.setPrefSize(32, 32);
         HBox content = new HBox(12, progressIndicator, new Label(statusText));
         content.setAlignment(Pos.CENTER_LEFT);
-        Dialog<Void> progressDialog = new Dialog<>();
+        Dialog<ButtonType> progressDialog = new Dialog<>();
         progressDialog.setTitle(dialogTitle);
         themeService.applyTo(progressDialog);
         progressDialog.getDialogPane().setContent(content);
         progressDialog.getDialogPane().setPrefWidth(360);
-        progressDialog.setOnCloseRequest(event -> { if (task.isRunning()) event.consume(); });
+        progressDialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+        progressDialog.setOnCloseRequest(event -> {
+            if (task.isRunning()) task.cancel(true);
+        });
         task.setOnSucceeded(event -> { progressDialog.close(); onSuccess.accept(task.getValue()); });
         task.setOnFailed(event -> {
             progressDialog.close();
             dialogService.showError(errorTitle, avatarFailureMessage(task.getException()));
         });
+        task.setOnCancelled(event -> progressDialog.close());
         Thread worker = new Thread(task, "avatar-image-worker");
         worker.setDaemon(true);
         progressDialog.show();
