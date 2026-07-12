@@ -102,7 +102,7 @@
                     
                     <TableView fx:id="contactsTable" VBox.vgrow="ALWAYS">
                         <columnResizePolicy>
-                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
                         </columnResizePolicy>
                         <columns>
                             <TableColumn fx:id="selectColumn" text="" minWidth="42" maxWidth="42" prefWidth="42" visible="false"/>

@@ -1,0 +1,365 @@
+package com.crm.controller;
+
+import com.crm.model.UserAccount;
+import com.crm.repository.LocalUserRepository;
+import com.crm.service.AvatarImageProcessor;
+import com.crm.service.AvatarImageProcessor.CropRegion;
+import com.crm.service.AvatarImageProcessor.CropSelection;
+import com.crm.service.AvatarImageProcessor.Source;
+import com.crm.service.AvatarService;
+import com.crm.service.AuthService;
+import com.crm.service.DialogService;
+import com.crm.service.ThemeService;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Pos;
+import javafx.geometry.Side;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+
+/** Handles account actions, authentication changes, logout, and profile avatars. */
+public final class AccountController {
+    private final Label currentUserLabel;
+    private final Button accountMenuButton;
+    private final FontIcon defaultAvatarIcon;
+    private final ImageView avatarImage;
+    private final ThemeService themeService;
+    private final DialogService dialogService;
+    private final AuthService authService;
+    private final AvatarService avatarService;
+    private final ChangeListener<Number> avatarScaleListener = (observable, oldValue, newValue) -> refreshAvatar();
+    private final WeakChangeListener<Number> weakAvatarScaleListener = new WeakChangeListener<>(avatarScaleListener);
+
+    private Window avatarScaleWindow;
+    private UserAccount currentUser;
+    private Runnable logoutAction;
+
+    public AccountController(Label currentUserLabel, Button accountMenuButton,
+                             FontIcon defaultAvatarIcon, ImageView avatarImage,
+                             ThemeService themeService, DialogService dialogService) {
+        this.currentUserLabel = Objects.requireNonNull(currentUserLabel);
+        this.accountMenuButton = Objects.requireNonNull(accountMenuButton);
+        this.defaultAvatarIcon = Objects.requireNonNull(defaultAvatarIcon);
+        this.avatarImage = Objects.requireNonNull(avatarImage);
+        this.themeService = Objects.requireNonNull(themeService);
+        this.dialogService = Objects.requireNonNull(dialogService);
+        LocalUserRepository users = new LocalUserRepository();
+        this.authService = new AuthService(users);
+        this.avatarService = new AvatarService(users);
+    }
+
+    public void setCurrentUser(UserAccount user, Runnable logoutAction) {
+        currentUser = Objects.requireNonNull(user);
+        this.logoutAction = logoutAction;
+        currentUserLabel.setText(user.getFullName());
+        refreshAvatar();
+        javafx.application.Platform.runLater(() -> {
+            installAvatarScaleTracking();
+            refreshAvatar();
+        });
+    }
+
+    public void showMenu() {
+        if (currentUser == null) return;
+        MenuItem profile = new MenuItem("Profilo e dati account");
+        profile.setOnAction(event -> showProfileDialog());
+        MenuItem security = new MenuItem("Sicurezza: cambia password");
+        security.setOnAction(event -> showChangePasswordDialog());
+        MenuItem avatar = new MenuItem("Aggiorna icona profilo");
+        avatar.setOnAction(event -> chooseAvatar());
+        MenuItem logout = new MenuItem("Esci dall'account");
+        logout.setOnAction(event -> logout());
+        new ContextMenu(profile, security, avatar, new SeparatorMenuItem(), logout)
+                .show(accountMenuButton, Side.BOTTOM, 0, 6);
+    }
+
+    public void logout() {
+        detachScaleTracking();
+        if (logoutAction != null) logoutAction.run();
+    }
+
+    private void chooseAvatar() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Scegli un'immagine profilo");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Immagini PNG e JPG", "*.png", "*.jpg", "*.jpeg"));
+        java.io.File selected = chooser.showOpenDialog(accountMenuButton.getScene().getWindow());
+        if (selected == null) return;
+        Path selectedPath = selected.toPath();
+        try {
+            if (Files.size(selectedPath) > AvatarImageProcessor.MAX_UPLOAD_BYTES) {
+                dialogService.showError("Immagine troppo grande", "La foto profilo non può superare 10 MB.");
+                return;
+            }
+        } catch (IOException exception) {
+            dialogService.showError("Immagine non valida", "Non è stato possibile leggere il file selezionato.");
+            return;
+        }
+        runAvatarTask("Preparazione dell'immagine...", "Immagine non valida",
+                () -> avatarService.prepareSource(selectedPath), this::showAvatarCropDialog);
+    }
+
+    private void showAvatarCropDialog(Source source) {
+        final double previewSize = 380;
+        final double cropSize = 250;
+        final Image previewImage = SwingFXUtils.toFXImage(source.preview(), null);
+        Canvas canvas = new Canvas(previewSize, previewSize);
+
+        class CropRenderer {
+            double centerX = source.width() / 2.0;
+            double centerY = source.height() / 2.0;
+            double zoom = 1.0;
+            double dragX;
+            double dragY;
+
+            CropSelection selection() { return new CropSelection(centerX, centerY, zoom); }
+
+            void clampSelection() {
+                CropSelection clamped = AvatarImageProcessor.clampSelection(source.width(), source.height(), selection());
+                centerX = clamped.centerX();
+                centerY = clamped.centerY();
+            }
+
+            void pan(double deltaX, double deltaY) {
+                double sourceSide = Math.min(source.width(), source.height()) / zoom;
+                centerX -= deltaX * sourceSide / cropSize;
+                centerY -= deltaY * sourceSide / cropSize;
+                clampSelection();
+            }
+
+            void draw() {
+                GraphicsContext graphics = canvas.getGraphicsContext2D();
+                graphics.setImageSmoothing(true);
+                graphics.clearRect(0, 0, previewSize, previewSize);
+                graphics.setFill(Color.web("#0f172a"));
+                graphics.fillRect(0, 0, previewSize, previewSize);
+                double backgroundScale = Math.min(previewSize / previewImage.getWidth(), previewSize / previewImage.getHeight());
+                double backgroundWidth = previewImage.getWidth() * backgroundScale;
+                double backgroundHeight = previewImage.getHeight() * backgroundScale;
+                graphics.setGlobalAlpha(0.24);
+                graphics.drawImage(previewImage, (previewSize - backgroundWidth) / 2,
+                        (previewSize - backgroundHeight) / 2, backgroundWidth, backgroundHeight);
+                graphics.setGlobalAlpha(1);
+                graphics.setFill(Color.rgb(15, 23, 42, 0.55));
+                graphics.fillRect(0, 0, previewSize, previewSize);
+                CropRegion region = AvatarImageProcessor.resolveCropRegion(source.width(), source.height(), selection());
+                double scaleX = previewImage.getWidth() / source.width();
+                double scaleY = previewImage.getHeight() / source.height();
+                double sourceX = region.x() * scaleX;
+                double sourceY = region.y() * scaleY;
+                double sourceWidth = Math.min(region.size() * scaleX, previewImage.getWidth() - sourceX);
+                double sourceHeight = Math.min(region.size() * scaleY, previewImage.getHeight() - sourceY);
+                double cropX = (previewSize - cropSize) / 2;
+                double cropY = (previewSize - cropSize) / 2;
+                graphics.save();
+                graphics.beginPath();
+                graphics.arc(previewSize / 2, previewSize / 2, cropSize / 2, cropSize / 2, 0, 360);
+                graphics.closePath();
+                graphics.clip();
+                graphics.drawImage(previewImage, sourceX, sourceY, sourceWidth, sourceHeight,
+                        cropX, cropY, cropSize, cropSize);
+                graphics.restore();
+                graphics.setStroke(Color.web("#60a5fa"));
+                graphics.setLineWidth(3);
+                graphics.strokeOval(cropX, cropY, cropSize, cropSize);
+            }
+        }
+
+        CropRenderer renderer = new CropRenderer();
+        renderer.draw();
+        canvas.setOnMousePressed(event -> { renderer.dragX = event.getX(); renderer.dragY = event.getY(); });
+        canvas.setOnMouseDragged(event -> {
+            renderer.pan(event.getX() - renderer.dragX, event.getY() - renderer.dragY);
+            renderer.dragX = event.getX();
+            renderer.dragY = event.getY();
+            renderer.draw();
+        });
+        Slider zoom = new Slider(1, AvatarImageProcessor.maxZoomFor(source.width(), source.height()), 1);
+        zoom.setShowTickLabels(true);
+        zoom.setMajorTickUnit(1);
+        zoom.setBlockIncrement(0.1);
+        zoom.valueProperty().addListener((observable, oldValue, newValue) -> {
+            renderer.zoom = newValue.doubleValue();
+            renderer.clampSelection();
+            renderer.draw();
+        });
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ritaglia immagine profilo");
+        themeService.applyTo(dialog);
+        ButtonType save = new ButtonType("Usa questa immagine", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
+        Label help = new Label("Trascina l'immagine per scegliere l'inquadratura. Usa il cursore per ingrandirla.");
+        help.setWrapText(true);
+        help.getStyleClass().add("auth-subtitle");
+        VBox content = new VBox(14, help, canvas, new Label("Zoom"), zoom);
+        content.setAlignment(Pos.CENTER);
+        content.setPrefWidth(previewSize);
+        dialog.getDialogPane().setContent(content);
+        if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
+            CropSelection crop = renderer.selection();
+            runAvatarTask("Ottimizzazione dell'avatar...", "Immagine non aggiornata", () -> {
+                avatarService.updateAvatar(currentUser, source, crop);
+                return null;
+            }, ignored -> refreshAvatar());
+        }
+    }
+
+    private void refreshAvatar() {
+        if (currentUser == null) return;
+        Image image = avatarService.loadAvatar(currentUser, navbarAvatarPixelSize());
+        boolean available = image != null && !image.isError() && image.getWidth() > 0 && image.getHeight() > 0;
+        if (available) avatarImage.setImage(image);
+        avatarImage.setVisible(available);
+        avatarImage.setManaged(available);
+        defaultAvatarIcon.setVisible(!available);
+        defaultAvatarIcon.setManaged(!available);
+    }
+
+    private int navbarAvatarPixelSize() {
+        double outputScale = 1.0;
+        if (avatarImage.getScene() != null && avatarImage.getScene().getWindow() != null) {
+            Window window = avatarImage.getScene().getWindow();
+            outputScale = Math.max(window.getOutputScaleX(), window.getOutputScaleY());
+        }
+        double logicalSize = Math.max(avatarImage.getFitWidth(), avatarImage.getFitHeight());
+        return Math.max(1, (int) Math.ceil(logicalSize * outputScale));
+    }
+
+    private void installAvatarScaleTracking() {
+        Window window = avatarImage.getScene() == null ? null : avatarImage.getScene().getWindow();
+        if (window == null || window == avatarScaleWindow) return;
+        detachScaleTracking();
+        avatarScaleWindow = window;
+        window.outputScaleXProperty().addListener(weakAvatarScaleListener);
+        window.outputScaleYProperty().addListener(weakAvatarScaleListener);
+    }
+
+    private void detachScaleTracking() {
+        if (avatarScaleWindow == null) return;
+        avatarScaleWindow.outputScaleXProperty().removeListener(weakAvatarScaleListener);
+        avatarScaleWindow.outputScaleYProperty().removeListener(weakAvatarScaleListener);
+        avatarScaleWindow = null;
+    }
+
+    private <T> void runAvatarTask(String statusText, String errorTitle,
+                                   Callable<T> operation, Consumer<T> onSuccess) {
+        javafx.concurrent.Task<T> task = new javafx.concurrent.Task<>() {
+            @Override protected T call() throws Exception { return operation.call(); }
+        };
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        progressIndicator.setPrefSize(32, 32);
+        HBox content = new HBox(12, progressIndicator, new Label(statusText));
+        content.setAlignment(Pos.CENTER_LEFT);
+        Dialog<Void> progressDialog = new Dialog<>();
+        progressDialog.setTitle("Immagine profilo");
+        themeService.applyTo(progressDialog);
+        progressDialog.getDialogPane().setContent(content);
+        progressDialog.getDialogPane().setPrefWidth(360);
+        progressDialog.setOnCloseRequest(event -> { if (task.isRunning()) event.consume(); });
+        task.setOnSucceeded(event -> { progressDialog.close(); onSuccess.accept(task.getValue()); });
+        task.setOnFailed(event -> {
+            progressDialog.close();
+            dialogService.showError(errorTitle, avatarFailureMessage(task.getException()));
+        });
+        Thread worker = new Thread(task, "avatar-image-worker");
+        worker.setDaemon(true);
+        progressDialog.show();
+        worker.start();
+    }
+
+    private String avatarFailureMessage(Throwable failure) {
+        for (Throwable current = failure; current != null; current = current.getCause()) {
+            if (current.getMessage() != null && !current.getMessage().isBlank()) return current.getMessage();
+        }
+        return "Non è stato possibile elaborare l'immagine selezionata.";
+    }
+
+    private void showProfileDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Profilo e account");
+        themeService.applyTo(dialog);
+        ButtonType save = new ButtonType("Salva", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(12);
+        TextField name = new TextField(currentUser.getFullName());
+        TextField email = new TextField(currentUser.getEmail());
+        email.setEditable(false);
+        grid.addRow(0, new Label("Nome:"), name);
+        grid.addRow(1, new Label("Email:"), email);
+        dialog.getDialogPane().setContent(grid);
+        if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
+            try {
+                authService.updateProfile(currentUser, name.getText());
+                currentUserLabel.setText(currentUser.getFullName());
+            } catch (IllegalArgumentException exception) {
+                dialogService.showError("Profilo non aggiornato", exception.getMessage());
+            } catch (IllegalStateException exception) {
+                dialogService.showError("Profilo non salvato",
+                        "Non è stato possibile salvare il profilo. Il lavoro resta aperto in questa sessione e potrai riprovare.");
+            }
+        }
+    }
+
+    private void showChangePasswordDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Cambia password");
+        themeService.applyTo(dialog);
+        ButtonType save = new ButtonType("Aggiorna password", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(save, ButtonType.CANCEL);
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(12);
+        PasswordField current = new PasswordField();
+        PasswordField next = new PasswordField();
+        PasswordField confirm = new PasswordField();
+        current.setPromptText("Password attuale");
+        next.setPromptText("Minimo 8 caratteri");
+        confirm.setPromptText("Ripeti la nuova password");
+        grid.addRow(0, new Label("Password attuale:"), current);
+        grid.addRow(1, new Label("Nuova password:"), next);
+        grid.addRow(2, new Label("Conferma password:"), confirm);
+        dialog.getDialogPane().setContent(grid);
+        boolean changed = false;
+        String error = null;
+        try {
+            if (dialog.showAndWait().filter(result -> result == save).isPresent()) {
+                try {
+                    if (!next.getText().equals(confirm.getText()))
+                        throw new IllegalArgumentException("Le password non coincidono.");
+                    authService.changePassword(currentUser, current.getText(), next.getText());
+                    changed = true;
+                } catch (IllegalArgumentException exception) {
+                    error = exception.getMessage();
+                } catch (IllegalStateException exception) {
+                    error = "Non è stato possibile salvare la password. Riprova senza chiudere l'app.";
+                }
+            }
+        } finally {
+            current.clear();
+            next.clear();
+            confirm.clear();
+        }
+        if (changed) dialogService.showInfo("Password aggiornata", "La password del tuo account è stata aggiornata.");
+        else if (error != null) dialogService.showError("Password non aggiornata", error);
+    }
+}

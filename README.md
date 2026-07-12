@@ -1,6 +1,6 @@
 # VoidReach
 
-VoidReach is a desktop CRM application developed with Java 21 and JavaFX. It currently provides local contact, calendar, and task management, account authentication, and persistent data storage on the user's computer.
+VoidReach is a desktop CRM application developed with Java 26 and JavaFX 26.0.1. It currently provides local contact, calendar, and task management, account authentication, and persistent data storage on the user's computer.
 
 > Current status: the **Contacts** and **Calendar** sections are operational. The other navigation items are present in the interface but still display an “under development” placeholder.
 
@@ -75,9 +75,20 @@ Avatars support PNG and JPG/JPEG images ranging from 300×300 to 20,000×20,000 
 
 ## Requirements
 
-- JDK 21 or newer
-- Apache Maven
+- JDK 26 (the project is currently verified with JDK 26.0.1)
+- Apache Maven 3.9 or newer
 - An operating system with JavaFX support (macOS, Windows, or Linux)
+
+JavaFX 26.0.1 is resolved by Maven; a separate JavaFX SDK installation is not required. Java 26 is a non-LTS release, so the runtime should be reassessed when Java 27 becomes available.
+
+Confirm that Maven is using JDK 26 before building:
+
+```bash
+java -version
+mvn -version
+```
+
+If Maven selects a different JDK, set `JAVA_HOME` to the JDK 26 installation before running the commands below.
 
 ## Running the Application
 
@@ -132,8 +143,12 @@ VoidReach-CRM-Calendar-Task/
         │   │   │   ├── AppLauncher.java            # Application launcher and configuration
         │   │   │   └── Main.java                   # JavaFX entry point and transitions
         │   │   ├── controller/
+        │   │   │   ├── AccountController.java       # Account, password, logout, and avatar UI
+        │   │   │   ├── CalendarController.java      # Calendar, tasks, timeline, and zoom
+        │   │   │   ├── ContactsController.java      # Contact table, dialogs, search, and pagination
         │   │   │   ├── LoginController.java         # Login, registration, and recovery
-        │   │   │   ├── MainController.java          # CRM, calendar, and account UI
+        │   │   │   ├── MainController.java          # Main-view composition and shared workspace state
+        │   │   │   ├── NavigationController.java    # Sidebar navigation and view switching
         │   │   │   └── SplashScreenController.java  # Splash screen
         │   │   ├── model/
         │   │   │   ├── Contact.java                 # Contact model
@@ -152,7 +167,10 @@ VoidReach-CRM-Calendar-Task/
         │   │       ├── AuthService.java             # Registration and authentication
         │   │       ├── AvatarImageProcessor.java    # Avatar validation, cropping, and resizing
         │   │       ├── AvatarService.java            # Avatar storage and loading
-        │   │       └── SessionService.java           # Remembered session
+        │   │       ├── CrmWorkspaceService.java      # CRM persistence and backup lifecycle
+        │   │       ├── DialogService.java            # Themed application alerts
+        │   │       ├── SessionService.java           # Remembered session
+        │   │       └── ThemeService.java             # Scene and dialog theme management
         │   └── resources/
         │       ├── com/crm/view/
         │       │   ├── LoginView.fxml                # Authentication views
