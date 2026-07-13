@@ -749,6 +749,14 @@
 }
 .dialog-pane .task-note-selector .label { -fx-text-fill: #334155; }
 .dialog-pane .task-note-selector .arrow { -fx-background-color: #64748b; }
+.note-picker { -fx-padding: 10; -fx-background-color: #ffffff; }
+.note-picker-search { -fx-min-height: 36; }
+.note-picker-tree { -fx-background-color: #ffffff; -fx-border-color: #dbe2ea; -fx-border-radius: 7; }
+.note-picker-tree .tree-cell { -fx-background-color: transparent; -fx-text-fill: #334155; -fx-padding: 6 8; -fx-font-weight: 700; }
+.note-picker-tree .note-picker-file, .note-picker-tree .note-picker-file .check-box { -fx-font-weight: 400; }
+.note-picker-tree .tree-cell:selected { -fx-background-color: #eff6ff; -fx-text-fill: #1d4ed8; }
+.note-picker-tree .check-box { -fx-text-fill: #334155; }
+.note-picker-hint { -fx-text-fill: #64748b; -fx-font-size: 10px; }
 .context-menu { -fx-background-color: #ffffff; -fx-border-color: #dbe2ea; }
 .context-menu .menu-item .label { -fx-text-fill: #1e293b; }
 .context-menu .menu-item:focused { -fx-background-color: #eff6ff; }

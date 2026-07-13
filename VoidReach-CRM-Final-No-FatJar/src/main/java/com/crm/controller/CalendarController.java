@@ -1,11 +1,14 @@
 package com.crm.controller;
 
 import com.crm.model.Note;
+import com.crm.model.NoteFolder;
 import com.crm.model.Task;
 import com.crm.service.DialogService;
 import com.crm.service.ThemeService;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
@@ -26,11 +29,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /** Owns calendar state, task editing, timeline rendering, zoom, and the calendar sidebar. */
 public final class CalendarController {
@@ -187,6 +192,12 @@ public final class CalendarController {
     }
 
     public void refreshTheme() {
+        render();
+        updateSidebar();
+    }
+
+    /** Refreshes note titles and link controls without changing calendar state or saving data. */
+    public void refreshNoteLinks() {
         render();
         updateSidebar();
     }
@@ -751,26 +762,61 @@ public final class CalendarController {
         MenuButton noteMenu = new MenuButton("No linked notes");
         noteMenu.getStyleClass().add("task-note-selector");
         noteMenu.setMaxWidth(Double.MAX_VALUE);
-        Map<Note, CheckMenuItem> noteSelections = new java.util.LinkedHashMap<>();
+        Map<Note, BooleanProperty> noteSelections = new java.util.LinkedHashMap<>();
         String existingTaskId = existingTask == null ? "" : existingTask.getId();
         Runnable updateNoteMenuText = () -> {
-            long selected = noteSelections.values().stream().filter(CheckMenuItem::isSelected).count();
+            long selected = noteSelections.values().stream().filter(BooleanProperty::get).count();
             noteMenu.setText(selected == 0 ? "No linked notes"
                     : selected + (selected == 1 ? " linked note" : " linked notes"));
         };
         noteIntegration.notes().forEach(candidate -> {
-            String noteTitle = candidate.getTitle().isBlank() ? "Untitled note" : candidate.getTitle();
-            CheckMenuItem choice = new CheckMenuItem(noteTitle + " " + candidate.getFormat().extension());
-            choice.setSelected(!existingTaskId.isBlank() && candidate.isLinkedToTask(existingTaskId));
-            choice.setOnAction(event -> updateNoteMenuText.run());
+            BooleanProperty choice = new SimpleBooleanProperty(
+                    !existingTaskId.isBlank() && candidate.isLinkedToTask(existingTaskId));
+            choice.addListener((observable, oldValue, newValue) -> updateNoteMenuText.run());
             noteSelections.put(candidate, choice);
-            noteMenu.getItems().add(choice);
         });
         if (noteSelections.isEmpty()) {
             MenuItem empty = new MenuItem("No notes available");
             empty.setDisable(true);
             noteMenu.getItems().add(empty);
             noteMenu.setDisable(true);
+        } else {
+            TextField noteSearch = new TextField();
+            noteSearch.setPromptText("Search notes by title…");
+            noteSearch.getStyleClass().add("note-picker-search");
+            TreeView<NotePickerItem> noteTree = new TreeView<>();
+            noteTree.getStyleClass().add("note-picker-tree");
+            noteTree.setPrefSize(420, 330);
+            noteTree.setCellFactory(ignored -> new TreeCell<>() {
+                @Override protected void updateItem(NotePickerItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(null);
+                    setGraphic(null);
+                    if (empty || item == null) return;
+                    if (item.note() == null) {
+                        setText(item.label());
+                        getStyleClass().remove("note-picker-file");
+                        return;
+                    }
+                    if (!getStyleClass().contains("note-picker-file")) getStyleClass().add("note-picker-file");
+                    CheckBox choice = new CheckBox(item.label() + " " + item.note().getFormat().extension());
+                    BooleanProperty selected = noteSelections.get(item.note());
+                    choice.setSelected(selected.get());
+                    choice.selectedProperty().addListener((observable, oldValue, newValue) -> selected.set(newValue));
+                    choice.setMaxWidth(Double.MAX_VALUE);
+                    setGraphic(choice);
+                }
+            });
+            Runnable refreshNoteTree = () -> noteTree.setRoot(buildNotePickerTree(
+                    noteIntegration.notes(), noteIntegration.folders(), noteSearch.getText()));
+            noteSearch.textProperty().addListener((observable, oldValue, newValue) -> refreshNoteTree.run());
+            refreshNoteTree.run();
+            Label hint = new Label("Expand folders and select one or more notes");
+            hint.getStyleClass().add("note-picker-hint");
+            VBox picker = new VBox(8, noteSearch, noteTree, hint);
+            picker.getStyleClass().add("note-picker");
+            CustomMenuItem pickerItem = new CustomMenuItem(picker, false);
+            noteMenu.getItems().add(pickerItem);
         }
         updateNoteMenuText.run();
         grid.add(new Label("Title:"), 0, 0); grid.add(title, 1, 0);
@@ -832,7 +878,7 @@ public final class CalendarController {
                 if (existingTask != null) removeTask(sourceDate, existingTask);
                 addTask(targetDate, replacement);
                 noteSelections.forEach((candidate, selection) -> {
-                    if (selection.isSelected()) candidate.linkTask(replacement.getId());
+                    if (selection.get()) candidate.linkTask(replacement.getId());
                     else candidate.unlinkTask(replacement.getId());
                 });
                 dateToDisplay = targetDate;
@@ -869,14 +915,76 @@ public final class CalendarController {
         return false;
     }
 
+    private TreeItem<NotePickerItem> buildNotePickerTree(List<Note> notes, List<NoteFolder> folders,
+                                                          String searchText) {
+        String query = searchText == null ? "" : searchText.trim().toLowerCase(Locale.ROOT);
+        TreeItem<NotePickerItem> root = new TreeItem<>(new NotePickerItem("Home", null));
+        root.setExpanded(true);
+        Map<String, TreeItem<NotePickerItem>> folderItems = new HashMap<>();
+        List<NoteFolder> sortedFolders = folders.stream()
+                .sorted(Comparator.comparing(NoteFolder::getName, String.CASE_INSENSITIVE_ORDER)).toList();
+        sortedFolders.forEach(folder -> folderItems.put(folder.getId(),
+                new TreeItem<>(new NotePickerItem(folder.getName(), null))));
+
+        sortedFolders.forEach(folder -> {
+            TreeItem<NotePickerItem> item = folderItems.get(folder.getId());
+            TreeItem<NotePickerItem> parent = folderItems.get(folder.getParentFolderId());
+            if (parent == null || createsTreeCycle(item, parent)) root.getChildren().add(item);
+            else parent.getChildren().add(item);
+        });
+
+        notes.stream()
+                .filter(note -> query.isEmpty() || displayNoteTitle(note).toLowerCase(Locale.ROOT).contains(query))
+                .sorted(Comparator.comparing(this::displayNoteTitle, String.CASE_INSENSITIVE_ORDER))
+                .forEach(note -> {
+                    TreeItem<NotePickerItem> parent = folderItems.get(note.getFolderId());
+                    if (parent == null) parent = root;
+                    parent.getChildren().add(new TreeItem<>(new NotePickerItem(displayNoteTitle(note), note)));
+                });
+
+        if (!query.isEmpty()) {
+            pruneEmptyNoteFolders(root);
+            expandTree(root);
+        }
+        return root;
+    }
+
+    private boolean createsTreeCycle(TreeItem<NotePickerItem> item, TreeItem<NotePickerItem> parent) {
+        Set<TreeItem<NotePickerItem>> visited = new HashSet<>();
+        for (TreeItem<NotePickerItem> cursor = parent; cursor != null && visited.add(cursor); cursor = cursor.getParent()) {
+            if (cursor == item) return true;
+        }
+        return false;
+    }
+
+    private boolean pruneEmptyNoteFolders(TreeItem<NotePickerItem> item) {
+        item.getChildren().removeIf(this::pruneEmptyNoteFolders);
+        return item.getValue().note() == null && item.getParent() != null && item.getChildren().isEmpty();
+    }
+
+    private void expandTree(TreeItem<NotePickerItem> item) {
+        item.setExpanded(true);
+        item.getChildren().forEach(this::expandTree);
+    }
+
+    private String displayNoteTitle(Note note) {
+        return note.getTitle().isBlank() ? "Untitled note" : note.getTitle();
+    }
+
+    private record NotePickerItem(String label, Note note) {
+        @Override public String toString() { return label; }
+    }
+
     public interface NoteIntegration {
         NoteIntegration EMPTY = new NoteIntegration() {
             @Override public List<Note> notes() { return List.of(); }
+            @Override public List<NoteFolder> folders() { return List.of(); }
             @Override public List<Note> notesForTask(String taskId) { return List.of(); }
             @Override public void openNote(String noteId) { }
         };
 
         List<Note> notes();
+        List<NoteFolder> folders();
         List<Note> notesForTask(String taskId);
         void openNote(String noteId);
     }

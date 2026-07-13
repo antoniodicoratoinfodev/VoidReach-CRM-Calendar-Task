@@ -93,6 +93,7 @@ public final class NotesController {
     private String currentFolderId = "";
     private boolean updatingEditor;
     private final PauseTransition highlightDebounce = new PauseTransition(Duration.millis(45));
+    private final PauseTransition linkedViewsDebounce = new PauseTransition(Duration.millis(90));
 
     public NotesController(VBox libraryPane, VBox editorPane, TextField searchField, TilePane grid,
                            Label emptyLabel, Label countLabel, TextField titleField, Label formatLabel,
@@ -155,6 +156,7 @@ public final class NotesController {
         titleField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (updatingEditor || currentNote == null) return;
             currentNote.setTitle(newValue);
+            refreshLinkedViewsSoon();
             changed();
         });
         contentArea.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -165,11 +167,13 @@ public final class NotesController {
             changed();
         });
         highlightDebounce.setOnFinished(event -> applySyntaxHighlighting());
+        linkedViewsDebounce.setOnFinished(event -> actions.notePresentationChanged());
         taskCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
             if (updatingEditor || currentNote == null) return;
             if (newValue == null || newValue.task() == null) return;
             currentNote.linkTask(newValue.task().getId());
             refreshTaskChoices();
+            refreshLinkedViewsSoon();
             changed();
         });
         folderCombo.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -313,6 +317,7 @@ public final class NotesController {
         if (confirmation.showAndWait().filter(ButtonType.OK::equals).isEmpty()) return;
         notes.remove(currentNote);
         currentNote = null;
+        actions.notePresentationChanged();
         changed();
         showLibrary();
     }
@@ -828,6 +833,7 @@ public final class NotesController {
             unlink.setOnAction(event -> {
                 currentNote.unlinkTask(option.task().getId());
                 refreshTaskChoices();
+                refreshLinkedViewsSoon();
                 changed();
             });
             openTaskButton.getItems().addAll(open, unlink, new SeparatorMenuItem());
@@ -841,6 +847,10 @@ public final class NotesController {
 
     private void scheduleLiveHighlight() {
         highlightDebounce.playFromStart();
+    }
+
+    private void refreshLinkedViewsSoon() {
+        linkedViewsDebounce.playFromStart();
     }
 
     private void applySyntaxHighlighting() {
@@ -1294,6 +1304,7 @@ public final class NotesController {
 
     public interface NoteActions {
         void dataChanged();
+        void notePresentationChanged();
         void showNotes();
         void openTask(LocalDate date, Task task);
     }

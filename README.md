@@ -101,6 +101,7 @@ Dashboard values update whenever contacts or tasks change.
 - Selected date, Day/Week mode, and zoom level are restored from the saved workspace.
 
 Calendar entries display the title of every linked note directly inside the task. Selecting a title opens that specific note's editor in the Notes section; long titles are shortened visually and remain available in a tooltip. Linked notes are also available in the agenda and task-edit dialog.
+Renaming, linking, unlinking, or deleting a note refreshes its Calendar and agenda references automatically without changing the selected date or calendar view.
 
 ### Tasks
 
@@ -206,7 +207,7 @@ The highlighter is language-agnostic and designed for common Java, JavaScript, P
 
 - Notes and tasks use a many-to-many relationship: every note can link to multiple tasks and every task can link to multiple notes.
 - Add multiple task links from the note editor; its linked-task menu shows the current count and provides separate Open and Unlink actions.
-- Select or clear multiple note links directly in the task dialog.
+- Select or clear multiple note links from a searchable hierarchical picker in the task dialog. The picker mirrors **Home**, folders, subfolders, and note files, and filters notes by title without losing the current selections.
 - The task dialog displays every currently linked note as an individual button that opens its editor in the Notes section.
 - Note cards summarize all available linked tasks.
 - Open linked notes from Tasks, Calendar entries, the calendar agenda, or the task dialog.

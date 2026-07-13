@@ -191,6 +191,7 @@ public final class MainController {
                 noteContentArea, notePreviewScroll, notePreviewContent, noteEditorStatus,
                 themeService, new NotesController.NoteActions() {
                     @Override public void dataChanged() { handleDataChanged(); }
+                    @Override public void notePresentationChanged() { calendarController.refreshNoteLinks(); }
                     @Override public void showNotes() { navigationController.showNotes(); }
                     @Override public void openTask(LocalDate date, com.crm.model.Task task) {
                         calendarController.editTask(date, task);
@@ -198,6 +199,7 @@ public final class MainController {
                 });
         calendarController.setNoteIntegration(new CalendarController.NoteIntegration() {
             @Override public List<com.crm.model.Note> notes() { return notesController.snapshot(); }
+            @Override public List<com.crm.model.NoteFolder> folders() { return notesController.foldersSnapshot(); }
             @Override public List<com.crm.model.Note> notesForTask(String taskId) {
                 return notesController.notesForTask(taskId);
             }

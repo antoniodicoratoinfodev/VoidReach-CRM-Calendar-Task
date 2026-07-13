@@ -148,6 +148,12 @@
 }
 .dialog-pane .task-note-selector .label { -fx-text-fill: #eef2f7; }
 .dialog-pane .task-note-selector .arrow { -fx-background-color: #aeb9c9; }
+.note-picker { -fx-background-color: #202d42; }
+.note-picker-tree { -fx-background-color: #111c31; -fx-border-color: #3a4960; }
+.note-picker-tree .tree-cell { -fx-background-color: transparent; -fx-text-fill: #d9e0eb; }
+.note-picker-tree .tree-cell:selected { -fx-background-color: #263c60; -fx-text-fill: #ffffff; }
+.note-picker-tree .check-box { -fx-text-fill: #e9edf4; }
+.note-picker-hint { -fx-text-fill: #9ca9bc; }
 .context-menu { -fx-background-color: #202d42; -fx-border-color: #3a4960; }
 .context-menu .menu-item .label { -fx-text-fill: #e9edf4; }
 .context-menu .menu-item:focused { -fx-background-color: #2c3b52; }
