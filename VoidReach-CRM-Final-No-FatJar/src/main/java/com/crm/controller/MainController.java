@@ -287,7 +287,6 @@ public final class MainController {
         calendarController.applyState(snapshot.tasksByDate(), snapshot.selectedDate(),
                 snapshot.calendarViewMode(), snapshot.calendarZoom());
         notesController.applyState(snapshot.notes(), snapshot.noteFolders(), calendarController.tasksSnapshot());
-        tasksController.refresh(calendarController.tasksSnapshot());
         refreshOverview();
     }
 

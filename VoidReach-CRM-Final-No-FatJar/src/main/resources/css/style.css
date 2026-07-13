@@ -893,8 +893,12 @@
 .task-list-row-completed .task-list-title { -fx-strikethrough: true; -fx-text-fill: #94a3b8; }
 .task-list-row-completed .task-list-description { -fx-text-fill: #94a3b8; }
 .task-row-button { -fx-min-height: 30; -fx-padding: 0 9; -fx-font-size: 10px; }
-.task-delete-button { -fx-min-height: 30; -fx-padding: 0 9; -fx-background-color: transparent; -fx-text-fill: #e11d48; -fx-font-size: 10px; -fx-font-weight: 700; -fx-cursor: hand; }
-.task-delete-button:hover { -fx-background-color: #fff1f2; }
+.task-row-button.task-delete-button {
+    -fx-min-height: 30; -fx-padding: 0 9; -fx-background-color: transparent;
+    -fx-background-radius: 8; -fx-border-color: transparent; -fx-border-radius: 8;
+    -fx-text-fill: #e11d48; -fx-font-size: 10px; -fx-font-weight: 700; -fx-cursor: hand;
+}
+.task-row-button.task-delete-button:hover { -fx-background-color: #fff1f2; -fx-border-color: transparent; }
 .tasks-empty { -fx-padding: 32; -fx-alignment: CENTER; -fx-max-width: infinity; -fx-text-fill: #94a3b8; }
 .task-entry-completed { -fx-opacity: 0.58; }
 .task-entry-completed .task-title { -fx-strikethrough: true; }
@@ -1033,5 +1037,6 @@
     -fx-font-weight: 700; -fx-padding: 2 5; -fx-cursor: hand;
 }
 .calendar-note-links { -fx-padding: 2 0 1 0; }
-.task-note-links { -fx-alignment: CENTER_RIGHT; }
+.task-note-links { -fx-alignment: CENTER_LEFT; -fx-padding: 2 0 0 0; }
+.task-note-caption { -fx-text-fill: #94a3b8; -fx-font-size: 9px; -fx-font-weight: 800; -fx-padding: 2 2 2 0; }
 .calendar-note-link:hover, .activity-note-link:hover, .dialog-note-link:hover, .task-note-link:hover { -fx-background-color: #dbeafe; -fx-background-radius: 6; }

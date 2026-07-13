@@ -351,12 +351,12 @@
                         <ComboBox fx:id="taskFilterCombo" prefWidth="180"/>
                     </HBox>
 
-                    <VBox styleClass="data-card, task-list-card" VBox.vgrow="ALWAYS">
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="task-list-scroll" VBox.vgrow="ALWAYS">
+                    <StackPane styleClass="data-card, task-list-card" VBox.vgrow="ALWAYS">
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="task-list-scroll">
                             <VBox fx:id="taskListContainer" spacing="8" styleClass="task-list"/>
                         </ScrollPane>
                         <Label fx:id="tasksEmptyLabel" text="There are no tasks yet." wrapText="true" styleClass="tasks-empty"/>
-                    </VBox>
+                    </StackPane>
                 </VBox>
 
                 <VBox fx:id="notesView" visible="false" styleClass="notes-view" VBox.vgrow="ALWAYS">

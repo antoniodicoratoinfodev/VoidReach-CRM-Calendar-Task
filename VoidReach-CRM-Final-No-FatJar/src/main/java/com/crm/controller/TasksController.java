@@ -42,6 +42,8 @@ public final class TasksController {
     private static final String UPCOMING = "Upcoming";
     private static final String OVERDUE = "Overdue";
     private static final String COMPLETED = "Completed";
+    private static final double SCHEDULE_COLUMN_WIDTH = 150.0;
+    private static final double STATUS_COLUMN_WIDTH = 76.0;
 
     private final TextField searchField;
     private final ComboBox<String> filter;
@@ -144,24 +146,57 @@ public final class TasksController {
         Region marker = new Region();
         marker.getStyleClass().addAll("task-list-marker", "marker-" + safeColor(task.getColor()));
 
-        Label title = new Label(safe(task.getTitle()).isBlank() ? "Untitled task" : task.getTitle());
+        Label title = new Label(displayTitle(task));
+        title.setMaxWidth(Double.MAX_VALUE);
+        title.setTextOverrun(OverrunStyle.ELLIPSIS);
         title.getStyleClass().add("task-list-title");
         Label description = new Label(safe(task.getDescription()).isBlank()
                 ? "No description" : task.getDescription());
         description.setMaxWidth(Double.MAX_VALUE);
+        description.setTextOverrun(OverrunStyle.ELLIPSIS);
         description.getStyleClass().add("task-list-description");
         VBox details = new VBox(4, title, description);
+        details.setMinWidth(0);
         HBox.setHgrow(details, Priority.ALWAYS);
+
+        List<Note> linkedNotes = actions.linkedNotes(task.getId());
+        if (!linkedNotes.isEmpty()) {
+            FlowPane noteLinks = new FlowPane(4, 4);
+            noteLinks.setPrefWrapLength(240);
+            noteLinks.setMaxWidth(Double.MAX_VALUE);
+            noteLinks.getStyleClass().add("task-note-links");
+            Label noteCaption = new Label("Notes");
+            noteCaption.getStyleClass().add("task-note-caption");
+            noteLinks.getChildren().add(noteCaption);
+            linkedNotes.forEach(linked -> {
+                String noteTitle = safe(linked.getTitle()).isBlank() ? "Untitled note" : linked.getTitle();
+                Button note = new Button(noteTitle);
+                note.getStyleClass().add("task-note-link");
+                note.setMaxWidth(160);
+                note.setTextOverrun(OverrunStyle.ELLIPSIS);
+                note.setTooltip(new Tooltip("Open note: " + noteTitle));
+                note.setOnAction(event -> actions.openNote(linked.getId()));
+                noteLinks.getChildren().add(note);
+            });
+            details.getChildren().add(noteLinks);
+        }
 
         Label date = new Label(entry.date().format(DATE_FORMAT));
         date.getStyleClass().add("task-list-date");
         Label time = new Label(timeRange(task));
         time.getStyleClass().add("task-list-time");
         VBox schedule = new VBox(4, date, time);
-        schedule.setPrefWidth(150);
+        schedule.setMinWidth(SCHEDULE_COLUMN_WIDTH);
+        schedule.setPrefWidth(SCHEDULE_COLUMN_WIDTH);
+        schedule.setMaxWidth(SCHEDULE_COLUMN_WIDTH);
 
         Label status = new Label(status(entry));
         status.getStyleClass().addAll("task-status", statusClass(entry));
+        HBox statusColumn = new HBox(status);
+        statusColumn.setAlignment(Pos.CENTER);
+        statusColumn.setMinWidth(STATUS_COLUMN_WIDTH);
+        statusColumn.setPrefWidth(STATUS_COLUMN_WIDTH);
+        statusColumn.setMaxWidth(STATUS_COLUMN_WIDTH);
 
         Button calendar = new Button("Calendar");
         calendar.getStyleClass().addAll("task-row-button", "btn-secondary");
@@ -172,29 +207,10 @@ public final class TasksController {
         Button delete = new Button("Delete");
         delete.getStyleClass().addAll("task-row-button", "task-delete-button");
         delete.setOnAction(event -> confirmDelete(entry));
-        HBox controls = new HBox(6);
-        List<Note> linkedNotes = actions.linkedNotes(task.getId());
-        if (!linkedNotes.isEmpty()) {
-            FlowPane noteLinks = new FlowPane(4, 4);
-            noteLinks.setPrefWrapLength(220);
-            noteLinks.setMaxWidth(240);
-            noteLinks.getStyleClass().add("task-note-links");
-            linkedNotes.forEach(linked -> {
-                String noteTitle = linked.getTitle().isBlank() ? "Untitled note" : linked.getTitle();
-                Button note = new Button(noteTitle);
-                note.getStyleClass().add("task-note-link");
-                note.setMaxWidth(160);
-                note.setTextOverrun(OverrunStyle.ELLIPSIS);
-                note.setTooltip(new Tooltip("Open note: " + noteTitle));
-                note.setOnAction(event -> actions.openNote(linked.getId()));
-                noteLinks.getChildren().add(note);
-            });
-            controls.getChildren().add(noteLinks);
-        }
-        controls.getChildren().addAll(calendar, edit, delete);
+        HBox controls = new HBox(6, calendar, edit, delete);
         controls.setAlignment(Pos.CENTER_RIGHT);
 
-        row.getChildren().addAll(completed, marker, details, schedule, status, controls);
+        row.getChildren().addAll(completed, marker, details, schedule, statusColumn, controls);
         row.setOnMouseClicked(event -> {
             if (event.getButton() != MouseButton.PRIMARY || isInteractiveChild(event.getTarget(), row)) return;
             actions.edit(entry.date(), task);
@@ -205,7 +221,7 @@ public final class TasksController {
     private boolean isInteractiveChild(Object target, HBox row) {
         if (!(target instanceof Node node)) return false;
         for (Node current = node; current != null && current != row; current = current.getParent()) {
-            if (current instanceof ButtonBase || current instanceof CheckBox) return true;
+            if (current instanceof ButtonBase) return true;
         }
         return false;
     }
@@ -213,7 +229,7 @@ public final class TasksController {
     private void confirmDelete(DatedTask entry) {
         Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
         confirmation.setTitle("Delete task");
-        confirmation.setHeaderText("Delete “" + safe(entry.task().getTitle()) + "”?");
+        confirmation.setHeaderText("Delete “" + displayTitle(entry.task()) + "”?");
         confirmation.setContentText("The task will also be removed from the calendar.");
         themeService.applyTo(confirmation);
         if (confirmation.showAndWait().filter(ButtonType.OK::equals).isPresent()) {
@@ -254,6 +270,10 @@ public final class TasksController {
             case "red", "green", "yellow", "orange", "purple" -> normalized;
             default -> "blue";
         };
+    }
+
+    private String displayTitle(Task task) {
+        return safe(task.getTitle()).isBlank() ? "Untitled task" : task.getTitle();
     }
 
     private String safe(String value) { return value == null ? "" : value; }

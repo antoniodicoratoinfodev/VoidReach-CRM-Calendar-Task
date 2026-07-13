@@ -1176,8 +1176,12 @@
 .task-list-row-completed .task-list-title { -fx-strikethrough: true; -fx-text-fill: #64748b; }
 .task-list-row-completed .task-list-description { -fx-text-fill: #475569; }
 .task-row-button { -fx-min-height: 30; -fx-padding: 0 9; -fx-font-size: 10px; }
-.task-delete-button { -fx-min-height: 30; -fx-padding: 0 9; -fx-background-color: transparent; -fx-text-fill: #fb7185; -fx-font-size: 10px; -fx-font-weight: 700; -fx-cursor: hand; }
-.task-delete-button:hover { -fx-background-color: #4c0519; }
+.task-row-button.task-delete-button {
+    -fx-min-height: 30; -fx-padding: 0 9; -fx-background-color: transparent;
+    -fx-background-radius: 8; -fx-border-color: transparent; -fx-border-radius: 8;
+    -fx-text-fill: #fb7185; -fx-font-size: 10px; -fx-font-weight: 700; -fx-cursor: hand;
+}
+.task-row-button.task-delete-button:hover { -fx-background-color: #4c0519; -fx-border-color: transparent; }
 .tasks-empty { -fx-padding: 32; -fx-alignment: CENTER; -fx-max-width: infinity; -fx-text-fill: #64748b; }
 .task-entry-completed { -fx-opacity: 0.58; }
 .task-entry-completed .task-title { -fx-strikethrough: true; }
@@ -1314,4 +1318,6 @@
     -fx-background-color: transparent; -fx-text-fill: #60a5fa; -fx-font-size: 9px;
     -fx-font-weight: 700; -fx-padding: 2 5; -fx-cursor: hand;
 }
+.task-note-links { -fx-alignment: CENTER_LEFT; -fx-padding: 2 0 0 0; }
+.task-note-caption { -fx-text-fill: #64748b; -fx-font-size: 9px; -fx-font-weight: 800; -fx-padding: 2 2 2 0; }
 .calendar-note-link:hover, .activity-note-link:hover, .dialog-note-link:hover, .task-note-link:hover { -fx-background-color: #172554; -fx-background-radius: 6; }
