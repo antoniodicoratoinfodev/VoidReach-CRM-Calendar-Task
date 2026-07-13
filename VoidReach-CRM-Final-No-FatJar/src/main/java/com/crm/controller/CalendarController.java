@@ -706,8 +706,10 @@ public final class CalendarController {
             if (!linkedNotes.isEmpty()) {
                 if (linkedNotes.size() == 1) {
                     Note linked = linkedNotes.getFirst();
-                    Button openNote = new Button("Open note");
+                    String noteTitle = linked.getTitle().isBlank() ? "Untitled note" : linked.getTitle();
+                    Button openNote = new Button(noteTitle);
                     openNote.getStyleClass().add("activity-note-link");
+                    openNote.setTooltip(new Tooltip("Open note: " + noteTitle));
                     openNote.setOnAction(event -> noteIntegration.openNote(linked.getId()));
                     item.getChildren().add(openNote);
                 } else {
