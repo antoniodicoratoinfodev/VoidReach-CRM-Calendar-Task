@@ -447,10 +447,13 @@ public final class CalendarController {
                                   double topInset) {
         GraphicsContext graphics = canvas.getGraphicsContext2D();
         Color hourColor = Color.web(themeService.isBlueGrayTheme() ? "#43516a"
+                : themeService.isGrayBlueTheme() ? "#56616d"
                 : themeService.isDarkMode() ? "#2a3a52" : "#68727d");
         Color intervalColor = Color.web(themeService.isBlueGrayTheme() ? "#2e3b52"
+                : themeService.isGrayBlueTheme() ? "#3d454e"
                 : themeService.isDarkMode() ? "#18243a" : "#87919b");
         Color weekDivider = Color.web(themeService.isBlueGrayTheme() ? "#3a4961"
+                : themeService.isGrayBlueTheme() ? "#4d5864"
                 : themeService.isDarkMode() ? "#263449" : "#68727d");
         graphics.setLineWidth(1);
         for (int hour = 0; hour <= 24; hour++) {

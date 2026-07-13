@@ -395,7 +395,7 @@ public final class MainController {
     }
 
     private void updateThemeButton() {
-        themeToggleIcon.setIconLiteral(themeService.isBlueGrayTheme()
+        themeToggleIcon.setIconLiteral(themeService.isBlueGrayTheme() || themeService.isGrayBlueTheme()
                 ? "fas-palette"
                 : themeService.isDarkMode() ? "fas-sun" : "fas-moon");
         themeToggleBtn.setText("Theme: " + themeService.activeTheme().displayName());

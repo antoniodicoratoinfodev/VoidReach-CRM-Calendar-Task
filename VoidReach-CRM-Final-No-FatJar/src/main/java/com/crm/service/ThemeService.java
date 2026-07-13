@@ -15,11 +15,13 @@ public final class ThemeService {
     private static final String DARK_STYLESHEET = "/css/style-dark.css";
     private static final String LIGHT_STYLESHEET = "/css/style.css";
     private static final String BLUE_GRAY_STYLESHEET = "/css/style-blue-gray.css";
+    private static final String GRAY_BLUE_STYLESHEET = "/css/style-gray-blue.css";
 
     public enum Theme {
         DARK("Dark"),
         LIGHT("Light"),
-        BLUE_GRAY("Blue-gray");
+        BLUE_GRAY("Blue-gray"),
+        GRAY_BLUE("Gray Blue");
 
         private final String displayName;
 
@@ -50,6 +52,10 @@ public final class ThemeService {
 
     public boolean isBlueGrayTheme() {
         return activeTheme == Theme.BLUE_GRAY;
+    }
+
+    public boolean isGrayBlueTheme() {
+        return activeTheme == Theme.GRAY_BLUE;
     }
 
     public Theme activeTheme() {
@@ -90,14 +96,18 @@ public final class ThemeService {
             case LIGHT -> Color.web("#ffffff");
             case DARK -> Color.web("#111a2c");
             case BLUE_GRAY -> Color.web("#202d42");
+            case GRAY_BLUE -> Color.web("#30363d");
         });
     }
 
     private List<String> stylesheets() {
         String base = activeTheme == Theme.LIGHT ? LIGHT_STYLESHEET : DARK_STYLESHEET;
         String baseUrl = stylesheetUrl(base);
-        if (activeTheme != Theme.BLUE_GRAY) return List.of(baseUrl);
-        return List.of(baseUrl, stylesheetUrl(BLUE_GRAY_STYLESHEET));
+        return switch (activeTheme) {
+            case BLUE_GRAY -> List.of(baseUrl, stylesheetUrl(BLUE_GRAY_STYLESHEET));
+            case GRAY_BLUE -> List.of(baseUrl, stylesheetUrl(GRAY_BLUE_STYLESHEET));
+            default -> List.of(baseUrl);
+        };
     }
 
     private String stylesheetUrl(String resource) {

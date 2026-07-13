@@ -228,11 +228,12 @@ The highlighter is language-agnostic and designed for common Java, JavaScript, P
 
 ### Themes
 
-Three themes are available:
+Four themes are available:
 
 - Dark
 - Light
 - Blue-gray
+- Gray Blue
 
 The last selected theme is stored per account and restored when that account opens the application again. Themes are applied consistently to the main interface, dialogs, calendar, notes editor, Markdown Preview, and syntax highlighting.
 

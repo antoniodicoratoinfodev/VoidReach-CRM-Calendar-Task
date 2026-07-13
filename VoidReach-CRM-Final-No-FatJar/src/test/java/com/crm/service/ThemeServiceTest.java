@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThemeServiceTest {
     @Test
-    void cyclesThroughDarkLightAndBlueGrayThemes() {
+    void cyclesThroughAllThemes() {
         ThemeService service = new ThemeService(() -> null);
 
         assertEquals(ThemeService.Theme.DARK, service.activeTheme());
@@ -29,6 +29,11 @@ class ThemeServiceTest {
         assertTrue(service.isBlueGrayTheme());
 
         service.toggle();
+        assertEquals(ThemeService.Theme.GRAY_BLUE, service.activeTheme());
+        assertTrue(service.isDarkMode());
+        assertTrue(service.isGrayBlueTheme());
+
+        service.toggle();
         assertEquals(ThemeService.Theme.DARK, service.activeTheme());
     }
 
@@ -39,6 +44,9 @@ class ThemeServiceTest {
         service.restore("BLUE_GRAY");
         assertEquals(ThemeService.Theme.BLUE_GRAY, service.activeTheme());
 
+        service.restore("GRAY_BLUE");
+        assertEquals(ThemeService.Theme.GRAY_BLUE, service.activeTheme());
+
         service.restore("not-a-theme");
         assertEquals(ThemeService.Theme.DARK, service.activeTheme());
 
@@ -48,7 +56,8 @@ class ThemeServiceTest {
 
     @Test
     void themeStylesheetsArePackagedAndValid() throws IOException {
-        for (String resource : new String[]{"/css/style.css", "/css/style-dark.css", "/css/style-blue-gray.css"}) {
+        for (String resource : new String[]{"/css/style.css", "/css/style-dark.css",
+                "/css/style-blue-gray.css", "/css/style-gray-blue.css"}) {
             URL stylesheet = ThemeService.class.getResource(resource);
             assertNotNull(stylesheet);
 
