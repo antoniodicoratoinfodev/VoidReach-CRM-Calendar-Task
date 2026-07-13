@@ -232,7 +232,7 @@ Four themes are available:
 
 - Dark
 - Light
-- Blue-gray
+- Blue-Gray
 - Gray Blue
 
 The last selected theme is stored per account and restored when that account opens the application again. Themes are applied consistently to the main interface, dialogs, calendar, notes editor, Markdown Preview, and syntax highlighting.
