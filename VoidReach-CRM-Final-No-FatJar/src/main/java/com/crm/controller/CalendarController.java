@@ -50,7 +50,7 @@ public final class CalendarController {
     private static final double DEFAULT_ZOOM = 1.0;
     private static final double TIME_COLUMN_WIDTH = 65.0;
     private static final double MIN_TIMELINE_WIDTH = 320.0;
-    private static final double DAY_TOP_INSET = 12.0;
+    private static final double TIMELINE_TOP_SPACER_HEIGHT = 12.0;
     private static final double WEEK_HEADER_HEIGHT = 36.0;
 
     private final VBox calendarView;
@@ -354,7 +354,7 @@ public final class CalendarController {
     }
 
     private double timelineTopInset() {
-        return viewMode.equals("Week") ? WEEK_HEADER_HEIGHT : DAY_TOP_INSET;
+        return TIMELINE_TOP_SPACER_HEIGHT + (viewMode.equals("Week") ? WEEK_HEADER_HEIGHT : 0);
     }
 
     private double clamp(double value, double min, double max) {
@@ -409,7 +409,7 @@ public final class CalendarController {
         if (viewMode.equals("Week")) {
             Region cornerHeader = new Region();
             cornerHeader.getStyleClass().add("week-time-header");
-            cornerHeader.setPrefHeight(topInset);
+            cornerHeader.setPrefHeight(WEEK_HEADER_HEIGHT);
             AnchorPane.setTopAnchor(cornerHeader, 0.0);
             AnchorPane.setLeftAnchor(cornerHeader, 0.0);
             AnchorPane.setRightAnchor(cornerHeader, 0.0);
@@ -420,7 +420,7 @@ public final class CalendarController {
             Label hourLabel = new Label(String.format("%02d:00", hour));
             hourLabel.getStyleClass().add("hour-label");
             AnchorPane.setRightAnchor(hourLabel, 10.0);
-            AnchorPane.setTopAnchor(hourLabel, topInset + hourY - 10);
+            AnchorPane.setTopAnchor(hourLabel, topInset + hourY - 7);
             timeLabelsContainer.getChildren().add(hourLabel);
             if (hour < 24) addSubHourLabels(hour, topInset + hourY, zoomedMinuteHeight);
         }
@@ -482,7 +482,7 @@ public final class CalendarController {
     private void renderDayView(double minuteHeight, double topInset) {
         timelineArea.setOnMouseClicked(event -> {
             if (event.getClickCount() == 1 && event.getTarget() == timelineArea
-                    && event.getButton() == MouseButton.PRIMARY) {
+                    && event.getButton() == MouseButton.PRIMARY && event.getY() >= topInset) {
                 showNewTaskDialogAt((int) ((event.getY() - topInset) / minuteHeight));
             }
         });
@@ -498,7 +498,7 @@ public final class CalendarController {
             Label header = new Label(date.format(DateTimeFormatter.ofPattern("EEE dd/MM")));
             header.getStyleClass().add("week-day-header");
             header.setPrefWidth(dayWidth);
-            header.setPrefHeight(topInset);
+            header.setPrefHeight(WEEK_HEADER_HEIGHT);
             header.setLayoutX(day * dayWidth);
             header.setLayoutY(0);
             timelineArea.getChildren().add(header);
@@ -509,6 +509,7 @@ public final class CalendarController {
         timelineArea.setOnMouseClicked(event -> {
             if (event.getClickCount() != 1 || event.getTarget() != timelineArea
                     || event.getButton() != MouseButton.PRIMARY) return;
+            if (event.getY() < topInset) return;
             int dayOffset = (int) (event.getX() / dayWidth);
             if (dayOffset >= 0 && dayOffset < 7) {
                 datePicker.setValue(weekStartDate.plusDays(dayOffset));
