@@ -22,6 +22,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -42,7 +43,7 @@ public final class TasksController {
     private static final String UPCOMING = "Upcoming";
     private static final String OVERDUE = "Overdue";
     private static final String COMPLETED = "Completed";
-    private static final double SCHEDULE_COLUMN_WIDTH = 150.0;
+    private static final double TIME_COLUMN_WIDTH = 118.0;
     private static final double STATUS_COLUMN_WIDTH = 76.0;
 
     private final TextField searchField;
@@ -113,7 +114,16 @@ public final class TasksController {
                         || safe(entry.task().getDescription()).toLowerCase(Locale.ROOT).contains(query))
                 .toList();
 
-        visibleTasks.forEach(entry -> list.getChildren().add(taskRow(entry)));
+        LocalDate currentDate = null;
+        for (DatedTask entry : visibleTasks) {
+            if (!entry.date().equals(currentDate)) {
+                currentDate = entry.date();
+                LocalDate headerDate = currentDate;
+                long dayCount = visibleTasks.stream().filter(it -> it.date().equals(headerDate)).count();
+                list.getChildren().add(dateHeader(headerDate, dayCount));
+            }
+            list.getChildren().add(taskRow(entry));
+        }
         emptyLabel.setText(tasks.isEmpty()
                 ? "There are no tasks yet. Create one to get started."
                 : "No tasks match the selected filters.");
@@ -150,14 +160,17 @@ public final class TasksController {
         title.setMaxWidth(Double.MAX_VALUE);
         title.setTextOverrun(OverrunStyle.ELLIPSIS);
         title.getStyleClass().add("task-list-title");
-        Label description = new Label(safe(task.getDescription()).isBlank()
-                ? "No description" : task.getDescription());
-        description.setMaxWidth(Double.MAX_VALUE);
-        description.setTextOverrun(OverrunStyle.ELLIPSIS);
-        description.getStyleClass().add("task-list-description");
-        VBox details = new VBox(4, title, description);
+        VBox details = new VBox(4, title);
+        details.setAlignment(Pos.CENTER_LEFT);
         details.setMinWidth(0);
         HBox.setHgrow(details, Priority.ALWAYS);
+        if (!safe(task.getDescription()).isBlank()) {
+            Label description = new Label(task.getDescription());
+            description.setMaxWidth(Double.MAX_VALUE);
+            description.setTextOverrun(OverrunStyle.ELLIPSIS);
+            description.getStyleClass().add("task-list-description");
+            details.getChildren().add(description);
+        }
 
         List<Note> linkedNotes = actions.linkedNotes(task.getId());
         if (!linkedNotes.isEmpty()) {
@@ -181,14 +194,18 @@ public final class TasksController {
             details.getChildren().add(noteLinks);
         }
 
-        Label date = new Label(entry.date().format(DATE_FORMAT));
-        date.getStyleClass().add("task-list-date");
+        FontIcon clockIcon = new FontIcon("fas-clock");
+        clockIcon.getStyleClass().add("task-time-icon");
         Label time = new Label(timeRange(task));
         time.getStyleClass().add("task-list-time");
-        VBox schedule = new VBox(4, date, time);
-        schedule.setMinWidth(SCHEDULE_COLUMN_WIDTH);
-        schedule.setPrefWidth(SCHEDULE_COLUMN_WIDTH);
-        schedule.setMaxWidth(SCHEDULE_COLUMN_WIDTH);
+        HBox timeChip = new HBox(5, clockIcon, time);
+        timeChip.setAlignment(Pos.CENTER);
+        timeChip.getStyleClass().add("task-time-chip");
+        HBox schedule = new HBox(timeChip);
+        schedule.setAlignment(Pos.CENTER_LEFT);
+        schedule.setMinWidth(TIME_COLUMN_WIDTH);
+        schedule.setPrefWidth(TIME_COLUMN_WIDTH);
+        schedule.setMaxWidth(TIME_COLUMN_WIDTH);
 
         Label status = new Label(status(entry));
         status.getStyleClass().addAll("task-status", statusClass(entry));
@@ -198,16 +215,14 @@ public final class TasksController {
         statusColumn.setPrefWidth(STATUS_COLUMN_WIDTH);
         statusColumn.setMaxWidth(STATUS_COLUMN_WIDTH);
 
-        Button calendar = new Button("Calendar");
-        calendar.getStyleClass().addAll("task-row-button", "btn-secondary");
+        Button calendar = iconButton("fas-calendar-day", "Show in calendar");
         calendar.setOnAction(event -> actions.openCalendar(entry.date()));
-        Button edit = new Button("Edit");
-        edit.getStyleClass().addAll("task-row-button", "btn-secondary");
+        Button edit = iconButton("fas-pen", "Edit task");
         edit.setOnAction(event -> actions.edit(entry.date(), task));
-        Button delete = new Button("Delete");
-        delete.getStyleClass().addAll("task-row-button", "task-delete-button");
+        Button delete = iconButton("fas-trash-alt", "Delete task");
+        delete.getStyleClass().add("task-delete-button");
         delete.setOnAction(event -> confirmDelete(entry));
-        HBox controls = new HBox(6, calendar, edit, delete);
+        HBox controls = new HBox(4, calendar, edit, delete);
         controls.setAlignment(Pos.CENTER_RIGHT);
 
         row.getChildren().addAll(completed, marker, details, schedule, statusColumn, controls);
@@ -216,6 +231,47 @@ public final class TasksController {
             actions.edit(entry.date(), task);
         });
         return row;
+    }
+
+    private HBox dateHeader(LocalDate date, long taskCount) {
+        LocalDate today = LocalDate.now();
+        Label title = new Label(headerTitle(date, today).toUpperCase(Locale.ENGLISH));
+        title.getStyleClass().add("task-date-header-title");
+        HBox header = new HBox(8, title);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("task-date-header");
+        if (isNearToday(date, today)) {
+            Label fullDate = new Label(date.format(DATE_FORMAT));
+            fullDate.getStyleClass().add("task-date-header-date");
+            header.getChildren().add(fullDate);
+        }
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Label count = new Label(taskCount == 1 ? "1 task" : taskCount + " tasks");
+        count.getStyleClass().add("task-date-header-count");
+        header.getChildren().addAll(spacer, count);
+        if (date.isBefore(today)) header.getStyleClass().add("task-date-header-past");
+        return header;
+    }
+
+    private String headerTitle(LocalDate date, LocalDate today) {
+        if (date.equals(today)) return "Today";
+        if (date.equals(today.plusDays(1))) return "Tomorrow";
+        if (date.equals(today.minusDays(1))) return "Yesterday";
+        return date.format(DATE_FORMAT);
+    }
+
+    private boolean isNearToday(LocalDate date, LocalDate today) {
+        return !date.isBefore(today.minusDays(1)) && !date.isAfter(today.plusDays(1));
+    }
+
+    private Button iconButton(String iconLiteral, String description) {
+        Button button = new Button();
+        button.setGraphic(new FontIcon(iconLiteral));
+        button.getStyleClass().add("task-icon-button");
+        button.setTooltip(new Tooltip(description));
+        button.setAccessibleText(description);
+        return button;
     }
 
     private boolean isInteractiveChild(Object target, HBox row) {

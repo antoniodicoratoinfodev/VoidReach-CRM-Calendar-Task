@@ -9,6 +9,7 @@ import com.crm.service.AvatarService;
 import com.crm.service.AvatarService.PreloadedAvatars;
 import com.crm.service.SessionService;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -23,6 +24,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 import java.awt.Taskbar;
 import java.io.InputStream;
@@ -308,9 +310,56 @@ public class Main extends Application {
     }
 
     private void showMainStage(Runnable focusTarget) {
-        closeSplashStage();
-        mainStage.setOpacity(1.0);
+        if (mainStage.isShowing()) {
+            closeSplashStage();
+            mainStage.setOpacity(1.0);
+            bringToFront(focusTarget);
+            return;
+        }
+        // Windows paints a freshly shown window white and plays the maximize animation
+        // before JavaFX renders its first frame, which appeared as a white expanding
+        // rectangle after the splash. Show the window fully transparent, keep the splash
+        // up in the meantime, and reveal both changes only once the scene is painted.
+        mainStage.setOpacity(0.0);
+        revealMainStageOncePainted();
         bringToFront(focusTarget);
+    }
+
+    /** Closes the splash and makes the main window visible only after its first frame. */
+    private void revealMainStageOncePainted() {
+        Scene scene = mainStage.getScene();
+        boolean[] revealed = {false};
+        Runnable reveal = () -> {
+            if (revealed[0]) return;
+            revealed[0] = true;
+            closeSplashStage();
+            mainStage.setOpacity(1.0);
+            mainStage.toFront();
+            mainStage.requestFocus();
+        };
+        if (scene == null) {
+            reveal.run();
+            return;
+        }
+
+        Runnable[] pulseListener = new Runnable[1];
+        pulseListener[0] = () -> {
+            scene.removePostLayoutPulseListener(pulseListener[0]);
+            // The scene has been laid out; give the render thread a few frames to
+            // present it before making the window visible.
+            PauseTransition paintDelay = new PauseTransition(Duration.millis(100));
+            paintDelay.setOnFinished(e -> reveal.run());
+            paintDelay.play();
+        };
+        scene.addPostLayoutPulseListener(pulseListener[0]);
+
+        // Failsafe: the window must never stay invisible, even if no pulse arrives.
+        PauseTransition fallback = new PauseTransition(Duration.seconds(2));
+        fallback.setOnFinished(e -> {
+            scene.removePostLayoutPulseListener(pulseListener[0]);
+            reveal.run();
+        });
+        fallback.play();
     }
 
     /** Focuses the JavaFX window without starting a second native GUI toolkit. */

@@ -1156,18 +1156,28 @@
 .tasks-view { -fx-min-width: 820; }
 .task-list-card { -fx-padding: 10; }
 .task-list-scroll, .task-list-scroll > .viewport { -fx-background-color: transparent; -fx-background: transparent; }
-.task-list { -fx-padding: 0; }
+.task-list { -fx-padding: 0 2 8 2; }
+.task-date-header { -fx-min-height: 30; -fx-padding: 12 4 3 4; }
+.task-date-header-title { -fx-text-fill: #cbd5e1; -fx-font-size: 10px; -fx-font-weight: 800; }
+.task-date-header-date { -fx-text-fill: #64748b; -fx-font-size: 10px; -fx-font-weight: 700; }
+.task-date-header-count {
+    -fx-background-color: #1e293b; -fx-background-radius: 10; -fx-padding: 3 9;
+    -fx-text-fill: #94a3b8; -fx-font-size: 9px; -fx-font-weight: 800;
+}
+.task-date-header-past .task-date-header-title { -fx-text-fill: #fb7185; }
 .task-list-row {
-    -fx-min-height: 76; -fx-padding: 12 13;
+    -fx-min-height: 64; -fx-padding: 11 13;
     -fx-background-color: #111a2c; -fx-background-radius: 10;
     -fx-border-color: #263449; -fx-border-radius: 10;
+    -fx-cursor: hand;
 }
-.task-list-row:hover { -fx-background-color: #17233a; -fx-border-color: #334155; }
-.task-list-marker { -fx-min-width: 5; -fx-pref-width: 5; -fx-min-height: 42; -fx-background-radius: 4; }
+.task-list-row:hover { -fx-background-color: #17233a; -fx-border-color: #3b4c66; }
+.task-list-marker { -fx-min-width: 4; -fx-pref-width: 4; -fx-min-height: 38; -fx-background-radius: 4; }
 .task-list-title { -fx-text-fill: #e2e8f0; -fx-font-size: 13px; -fx-font-weight: 800; }
 .task-list-description { -fx-text-fill: #64748b; -fx-font-size: 11px; }
-.task-list-date { -fx-text-fill: #cbd5e1; -fx-font-size: 11px; -fx-font-weight: 700; }
-.task-list-time { -fx-text-fill: #64748b; -fx-font-size: 10px; }
+.task-time-chip { -fx-background-color: #1e293b; -fx-background-radius: 8; -fx-padding: 5 10; }
+.task-time-icon { -fx-icon-color: #64748b; -fx-icon-size: 10; }
+.task-list-time { -fx-text-fill: #94a3b8; -fx-font-size: 10px; -fx-font-weight: 700; }
 .task-status { -fx-padding: 5 9; -fx-background-radius: 12; -fx-font-size: 9px; -fx-font-weight: 800; }
 .task-status-planned { -fx-background-color: #312e81; -fx-text-fill: #c7d2fe; }
 .task-status-today { -fx-background-color: #172554; -fx-text-fill: #93c5fd; }
@@ -1175,13 +1185,30 @@
 .task-status-completed { -fx-background-color: #064e3b; -fx-text-fill: #6ee7b7; }
 .task-list-row-completed .task-list-title { -fx-strikethrough: true; -fx-text-fill: #64748b; }
 .task-list-row-completed .task-list-description { -fx-text-fill: #475569; }
-.task-row-button { -fx-min-height: 30; -fx-padding: 0 9; -fx-font-size: 10px; }
-.task-row-button.task-delete-button {
-    -fx-min-height: 30; -fx-padding: 0 9; -fx-background-color: transparent;
-    -fx-background-radius: 8; -fx-border-color: transparent; -fx-border-radius: 8;
-    -fx-text-fill: #fb7185; -fx-font-size: 10px; -fx-font-weight: 700; -fx-cursor: hand;
+.task-icon-button {
+    -fx-min-width: 30; -fx-pref-width: 30; -fx-max-width: 30;
+    -fx-min-height: 30; -fx-pref-height: 30; -fx-max-height: 30;
+    -fx-padding: 0; -fx-background-color: transparent; -fx-background-radius: 8;
+    -fx-border-color: transparent; -fx-cursor: hand; -fx-opacity: 0.55;
 }
-.task-row-button.task-delete-button:hover { -fx-background-color: #4c0519; -fx-border-color: transparent; }
+.task-icon-button .ikonli-font-icon { -fx-icon-color: #94a3b8; -fx-icon-size: 13; }
+.task-list-row:hover .task-icon-button { -fx-opacity: 1; }
+.task-icon-button:hover { -fx-background-color: #263449; }
+.task-icon-button.task-delete-button .ikonli-font-icon { -fx-icon-color: #fb7185; }
+.task-icon-button.task-delete-button:hover { -fx-background-color: #4c0519; }
+.task-metric-chip {
+    -fx-min-width: 26; -fx-pref-width: 26; -fx-max-width: 26;
+    -fx-min-height: 26; -fx-pref-height: 26; -fx-max-height: 26;
+    -fx-background-radius: 8; -fx-alignment: CENTER;
+}
+.task-metric-total { -fx-background-color: #1e293b; }
+.task-metric-total .ikonli-font-icon { -fx-icon-color: #94a3b8; }
+.task-metric-today { -fx-background-color: #172554; }
+.task-metric-today .ikonli-font-icon { -fx-icon-color: #93c5fd; }
+.task-metric-upcoming { -fx-background-color: #312e81; }
+.task-metric-upcoming .ikonli-font-icon { -fx-icon-color: #c7d2fe; }
+.task-metric-completed { -fx-background-color: #064e3b; }
+.task-metric-completed .ikonli-font-icon { -fx-icon-color: #6ee7b7; }
 .tasks-empty { -fx-padding: 32; -fx-alignment: CENTER; -fx-max-width: infinity; -fx-text-fill: #64748b; }
 .task-entry-completed { -fx-opacity: 0.58; }
 .task-entry-completed .task-title { -fx-strikethrough: true; }

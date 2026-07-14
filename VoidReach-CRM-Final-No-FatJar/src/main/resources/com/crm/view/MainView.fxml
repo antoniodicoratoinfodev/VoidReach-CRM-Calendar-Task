@@ -325,22 +325,42 @@
 
                     <HBox spacing="12">
                         <VBox styleClass="metric-card" HBox.hgrow="ALWAYS">
-                            <Label text="TOTAL" styleClass="metric-label"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <StackPane styleClass="task-metric-chip, task-metric-total">
+                                    <FontIcon iconLiteral="fas-layer-group" iconSize="12"/>
+                                </StackPane>
+                                <Label text="TOTAL" styleClass="metric-label"/>
+                            </HBox>
                             <Label fx:id="tasksTotalCountLabel" text="0" styleClass="metric-value"/>
                             <Label text="in the calendar" styleClass="metric-caption"/>
                         </VBox>
                         <VBox styleClass="metric-card" HBox.hgrow="ALWAYS">
-                            <Label text="DUE TODAY" styleClass="metric-label"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <StackPane styleClass="task-metric-chip, task-metric-today">
+                                    <FontIcon iconLiteral="fas-calendar-day" iconSize="12"/>
+                                </StackPane>
+                                <Label text="DUE TODAY" styleClass="metric-label"/>
+                            </HBox>
                             <Label fx:id="tasksTodayCountLabel" text="0" styleClass="metric-value"/>
                             <Label text="still open" styleClass="metric-caption"/>
                         </VBox>
                         <VBox styleClass="metric-card" HBox.hgrow="ALWAYS">
-                            <Label text="NEXT 7 DAYS" styleClass="metric-label"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <StackPane styleClass="task-metric-chip, task-metric-upcoming">
+                                    <FontIcon iconLiteral="fas-calendar-week" iconSize="12"/>
+                                </StackPane>
+                                <Label text="NEXT 7 DAYS" styleClass="metric-label"/>
+                            </HBox>
                             <Label fx:id="tasksUpcomingCountLabel" text="0" styleClass="metric-value"/>
                             <Label text="to complete" styleClass="metric-caption"/>
                         </VBox>
                         <VBox styleClass="metric-card" HBox.hgrow="ALWAYS">
-                            <Label text="COMPLETED" styleClass="metric-label"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <StackPane styleClass="task-metric-chip, task-metric-completed">
+                                    <FontIcon iconLiteral="fas-check-circle" iconSize="12"/>
+                                </StackPane>
+                                <Label text="COMPLETED" styleClass="metric-label"/>
+                            </HBox>
                             <Label fx:id="tasksCompletedCountLabel" text="0" styleClass="metric-value"/>
                             <Label text="finished tasks" styleClass="metric-caption"/>
                         </VBox>

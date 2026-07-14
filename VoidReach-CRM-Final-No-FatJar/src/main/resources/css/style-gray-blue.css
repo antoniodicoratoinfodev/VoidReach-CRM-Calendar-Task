@@ -183,12 +183,20 @@
 
 .task-list-row { -fx-background-color: #30363d; -fx-border-color: #4e5964; }
 .task-list-row:hover { -fx-background-color: #3b434c; -fx-border-color: #64717e; }
-.task-list-title, .task-list-date { -fx-text-fill: #e8eaed; }
-.task-list-description, .task-list-time, .tasks-empty { -fx-text-fill: #929ba5; }
-.task-row-button { -fx-background-color: #3b434c; -fx-border-color: #596570; }
-.task-row-button:hover { -fx-background-color: #48525d; }
-.task-row-button.task-delete-button { -fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #fb7185; }
-.task-row-button.task-delete-button:hover { -fx-background-color: #4c0519; -fx-border-color: transparent; }
+.task-list-title { -fx-text-fill: #e8eaed; }
+.task-list-description, .tasks-empty { -fx-text-fill: #929ba5; }
+.task-date-header-title { -fx-text-fill: #dee1e5; }
+.task-date-header-date { -fx-text-fill: #929ba5; }
+.task-date-header-count { -fx-background-color: #3b434c; -fx-text-fill: #b5bbc1; }
+.task-time-chip { -fx-background-color: #3b434c; }
+.task-time-icon { -fx-icon-color: #929ba5; }
+.task-list-time { -fx-text-fill: #b5bbc1; }
+.task-icon-button .ikonli-font-icon { -fx-icon-color: #b5bbc1; }
+.task-icon-button:hover { -fx-background-color: #48525d; }
+.task-icon-button.task-delete-button .ikonli-font-icon { -fx-icon-color: #fb7185; }
+.task-icon-button.task-delete-button:hover { -fx-background-color: #4c0519; }
+.task-metric-total { -fx-background-color: #3b434c; }
+.task-metric-total .ikonli-font-icon { -fx-icon-color: #b5bbc1; }
 
 .notes-view, .notes-library, .note-editor { -fx-background-color: #282d33; }
 .notes-breadcrumb-bar, .note-folder-card { -fx-background-color: #30363d; -fx-border-color: #4e5964; }
