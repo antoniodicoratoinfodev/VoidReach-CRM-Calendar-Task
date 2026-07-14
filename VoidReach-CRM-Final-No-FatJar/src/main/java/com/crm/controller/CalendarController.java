@@ -883,7 +883,7 @@ public final class CalendarController {
         grid.add(new Label("Start (H:M):"), 0, 2); grid.add(new HBox(5, startHour, new Label(":"), startMinute), 1, 2);
         grid.add(new Label("End (H:M):"), 0, 3); grid.add(new HBox(5, endHour, new Label(":"), endMinute), 1, 3);
         grid.add(new Label("Color:"), 0, 4); grid.add(color, 1, 4);
-        grid.add(new Label("Description:"), 0, 5); grid.add(description, 1, 5);
+        grid.add(new Label("Description:"), 0, 5); grid.add(DialogService.withResizeGrip(description), 1, 5);
         grid.add(new Label("Linked notes:"), 0, 6); grid.add(noteMenu, 1, 6);
         if (existingTask != null && !noteIntegration.notesForTask(existingTask.getId()).isEmpty()) {
             FlowPane links = new FlowPane(6, 6);

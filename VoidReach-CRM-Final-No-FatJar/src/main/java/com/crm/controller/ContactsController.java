@@ -1,6 +1,7 @@
 package com.crm.controller;
 
 import com.crm.model.Contact;
+import com.crm.service.DialogService;
 import com.crm.service.ThemeService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -372,7 +373,7 @@ public final class ContactsController {
         grid.add(new Label("Email:"), 0, 3); grid.add(email, 1, 3);
         grid.add(new Label("Phone:"), 0, 4); grid.add(phone, 1, 4);
         grid.add(new Label("Tags:"), 0, 5); grid.add(tags, 1, 5);
-        grid.add(new Label("Description:"), 0, 6); grid.add(description, 1, 6);
+        grid.add(new Label("Description:"), 0, 6); grid.add(DialogService.withResizeGrip(description), 1, 6);
         dialog.getDialogPane().setContent(grid);
         dialog.setResultConverter(result -> {
             if (result != save) return null;
