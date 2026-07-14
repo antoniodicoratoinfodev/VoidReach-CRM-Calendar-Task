@@ -13,7 +13,22 @@ public record CrmDataSnapshot(
         List<NoteFolder> noteFolders,
         LocalDate selectedDate,
         String calendarViewMode,
-        double calendarZoom) {
+        double calendarZoom,
+        List<String> contactCustomFields,
+        boolean contactsQuickEdit) {
+
+    public CrmDataSnapshot(List<Contact> contacts, Map<LocalDate, List<Task>> tasksByDate,
+                           List<Note> notes, List<NoteFolder> noteFolders, LocalDate selectedDate,
+                           String calendarViewMode, double calendarZoom, List<String> contactCustomFields) {
+        this(contacts, tasksByDate, notes, noteFolders, selectedDate, calendarViewMode, calendarZoom,
+                contactCustomFields, false);
+    }
+
+    public CrmDataSnapshot(List<Contact> contacts, Map<LocalDate, List<Task>> tasksByDate,
+                           List<Note> notes, List<NoteFolder> noteFolders, LocalDate selectedDate,
+                           String calendarViewMode, double calendarZoom) {
+        this(contacts, tasksByDate, notes, noteFolders, selectedDate, calendarViewMode, calendarZoom, List.of());
+    }
 
     public CrmDataSnapshot(List<Contact> contacts, Map<LocalDate, List<Task>> tasksByDate,
                            LocalDate selectedDate, String calendarViewMode, double calendarZoom) {
@@ -37,12 +52,29 @@ public record CrmDataSnapshot(
                                                    LocalDate selectedDate,
                                                    String calendarViewMode,
                                                    double calendarZoom) {
+        return detachedCopyOf(contacts, tasksByDate, notes, noteFolders,
+                selectedDate, calendarViewMode, calendarZoom, List.of(), false);
+    }
+
+    public static CrmDataSnapshot detachedCopyOf(List<Contact> contacts,
+                                                   Map<LocalDate, List<Task>> tasksByDate,
+                                                   List<Note> notes,
+                                                   List<NoteFolder> noteFolders,
+                                                   LocalDate selectedDate,
+                                                   String calendarViewMode,
+                                                   double calendarZoom,
+                                                   List<String> contactCustomFields,
+                                                   boolean contactsQuickEdit) {
         List<Contact> copiedContacts = contacts.stream()
-                .map(contact -> new Contact(contact.getId(), contact.nameProperty().get(),
-                        contact.companyProperty().get(), contact.titleProperty().get(),
-                        contact.emailProperty().get(), contact.phoneProperty().get(),
-                        contact.lastInteractionProperty().get(), contact.tagsProperty().get(),
-                        contact.descriptionProperty().get()))
+                .map(contact -> {
+                    Contact copy = new Contact(contact.getId(), contact.nameProperty().get(),
+                            contact.companyProperty().get(), contact.titleProperty().get(),
+                            contact.emailProperty().get(), contact.phoneProperty().get(),
+                            contact.lastInteractionProperty().get(), contact.tagsProperty().get(),
+                            contact.descriptionProperty().get());
+                    for (String field : contactCustomFields) copy.setCustomField(field, contact.customFieldValue(field));
+                    return copy;
+                })
                 .toList();
 
         Map<LocalDate, List<Task>> copiedTasks = new LinkedHashMap<>();
@@ -64,7 +96,8 @@ public record CrmDataSnapshot(
                 .toList();
 
         return new CrmDataSnapshot(List.copyOf(copiedContacts), Map.copyOf(copiedTasks), List.copyOf(copiedNotes),
-                List.copyOf(copiedFolders), selectedDate, calendarViewMode, calendarZoom);
+                List.copyOf(copiedFolders), selectedDate, calendarViewMode, calendarZoom,
+                List.copyOf(contactCustomFields), contactsQuickEdit);
     }
 
     public static CrmDataSnapshot detachedCopyOf(List<Contact> contacts,

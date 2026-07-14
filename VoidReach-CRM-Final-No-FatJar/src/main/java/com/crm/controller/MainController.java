@@ -48,6 +48,7 @@ public final class MainController {
     @FXML private TableColumn<Contact, String> phoneColumn;
     @FXML private TableColumn<Contact, String> lastInteractionColumn;
     @FXML private TableColumn<Contact, String> tagsColumn;
+    @FXML private TableColumn<Contact, String> descriptionColumn;
     @FXML private TableColumn<Contact, Boolean> selectColumn;
     @FXML private TextField searchField;
     @FXML private ComboBox<String> rowsPerPageCombo;
@@ -55,6 +56,8 @@ public final class MainController {
     @FXML private Label paginationInfoLabel;
     @FXML private Button selectContactsBtn;
     @FXML private MenuButton contactsSortMenu;
+    @FXML private ToggleButton contactsInlineEditToggle;
+    @FXML private Button addFieldBtn;
 
     @FXML private ScrollPane homeView;
     @FXML private ScrollPane dashboardView;
@@ -175,9 +178,9 @@ public final class MainController {
                 dashboardTagsChart, dashboardActivityChart, dashboardInteractionsList);
         contactsController = new ContactsController(contactsTable, nameColumn, companyColumn,
                 titleColumn, emailColumn, phoneColumn, lastInteractionColumn, tagsColumn,
-                selectColumn, searchField, rowsPerPageCombo, contactsPagination,
-                paginationInfoLabel, selectContactsBtn, contactsSortMenu, themeService,
-                this::handleDataChanged);
+                descriptionColumn, selectColumn, searchField, rowsPerPageCombo, contactsPagination,
+                paginationInfoLabel, selectContactsBtn, contactsSortMenu, contactsInlineEditToggle,
+                addFieldBtn, themeService, this::handleDataChanged);
         calendarController = new CalendarController(calendarView, timeLabelsContainer,
                 calendarTimelineArea, calendarScrollPane, calendarDatePicker, viewModeCombo, selectedPeriodLabel,
                 miniMonthYearLabel, miniCalendarGrid, activitiesTitle, upcomingActivitiesList, themeService,
@@ -283,6 +286,8 @@ public final class MainController {
     }
 
     private void applyUserData(CrmDataSnapshot snapshot) {
+        contactsController.setCustomFields(snapshot.contactCustomFields());
+        contactsController.setQuickEditEnabled(snapshot.contactsQuickEdit());
         contactsController.setContacts(snapshot.contacts());
         calendarController.applyState(snapshot.tasksByDate(), snapshot.selectedDate(),
                 snapshot.calendarViewMode(), snapshot.calendarZoom());
@@ -306,7 +311,8 @@ public final class MainController {
         if (loadingWorkspace || calendarController.selectedDate() == null) return;
         CrmDataSnapshot snapshot = CrmDataSnapshot.detachedCopyOf(contactsController.snapshot(),
                 calendarController.tasksSnapshot(), notesController.snapshot(), notesController.foldersSnapshot(),
-                calendarController.selectedDate(), calendarController.viewMode(), calendarController.zoom());
+                calendarController.selectedDate(), calendarController.viewMode(), calendarController.zoom(),
+                contactsController.customFieldsSnapshot(), contactsController.isQuickEditEnabled());
         workspaceService.requestSave(snapshot, state -> Platform.runLater(() -> handleSaveState(state)));
     }
 

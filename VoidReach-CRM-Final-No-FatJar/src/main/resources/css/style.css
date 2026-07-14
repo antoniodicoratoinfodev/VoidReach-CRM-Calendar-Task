@@ -657,7 +657,7 @@
 .table-row-cell:selected { -fx-background-color: #e7edf5; }
 .table-row-cell .text { -fx-fill: #475569; }
 .table-row-cell:selected .text { -fx-fill: #1e3a8a; }
-.table-cell { -fx-padding: 0 8; -fx-border-color: transparent; }
+.table-cell { -fx-padding: 0 8; -fx-border-color: transparent; -fx-cell-size: 52; -fx-alignment: CENTER_LEFT; }
 .table-footer { -fx-min-height: 54; -fx-padding: 8 12 8 16; -fx-border-color: #e5eaf1; -fx-border-width: 1 0 0 0; }
 .pagination-info { -fx-text-fill: #94a3b8; -fx-font-size: 12px; }
 .pagination .pagination-control .button, .pagination .toggle-button {
@@ -1301,3 +1301,24 @@
 .markdown-strikethrough {
     -fx-fill: #52606d;
 }
+
+/* Contacts quick-edit (inline editing) */
+.inline-edit-toggle:selected {
+    -fx-background-color: rgba(37,99,235,0.10);
+    -fx-border-color: rgba(37,99,235,0.40);
+    -fx-text-fill: #1d4ed8;
+}
+.inline-edit-toggle:selected:hover { -fx-background-color: rgba(37,99,235,0.15); }
+.table-view .inline-cell-editor {
+    -fx-min-height: 28; -fx-pref-height: 28; -fx-max-height: 28;
+    -fx-background-color: #ffffff; -fx-background-radius: 6;
+    -fx-border-color: #2563eb; -fx-border-radius: 6;
+    -fx-text-fill: #0f172a; -fx-padding: 0 7;
+}
+.table-view .inline-cell-area {
+    -fx-background-color: #ffffff; -fx-background-radius: 6;
+    -fx-border-color: #2563eb; -fx-border-radius: 6;
+}
+.table-view .inline-cell-area .content { -fx-background-color: #ffffff; -fx-background-radius: 6; }
+.table-view .inline-cell-area .text { -fx-fill: #0f172a; }
+.table-view .inline-cell-area .scroll-pane, .table-view .inline-cell-area .viewport { -fx-background-color: transparent; }

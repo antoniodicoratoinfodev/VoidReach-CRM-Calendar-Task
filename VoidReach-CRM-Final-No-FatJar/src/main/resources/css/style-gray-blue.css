@@ -118,8 +118,7 @@
     -fx-border-color: transparent #4e5964 #4e5964 transparent;
     -fx-border-width: 0 1 1 0;
 }
-.task-blue { -fx-background-color: #6f95bd; -fx-border-color: #4e759e; }
-.task-blue .task-title, .task-blue .task-time, .task-blue .task-desc { -fx-text-fill: #ffffff; }
+.task-blue { -fx-background-color: #31445c; -fx-border-color: #8badcf; }
 
 .right-panel {
     -fx-background-color: #30363d;
@@ -225,3 +224,19 @@
 .note-code-area .paragraph-box:has-caret { -fx-background-color: #323940; }
 .markdown-code-block { -fx-background-color: #30363d; }
 .markdown-tool:hover { -fx-background-color: #3b434c; }
+
+/* Contacts quick-edit (inline editing) */
+.inline-edit-toggle:selected {
+    -fx-background-color: rgba(111,149,189,0.18);
+    -fx-border-color: rgba(111,149,189,0.55);
+    -fx-text-fill: #c3d6ea;
+}
+.inline-edit-toggle:selected:hover { -fx-background-color: rgba(111,149,189,0.24); }
+.table-view .inline-cell-editor { -fx-border-color: #6f95bd; }
+.table-view .inline-cell-area {
+    -fx-background-color: #23282e; -fx-background-radius: 6;
+    -fx-border-color: #6f95bd; -fx-border-radius: 6;
+    -fx-text-fill: #edf0f2; -fx-highlight-fill: #6f95bd; -fx-highlight-text-fill: #ffffff;
+}
+.table-view .inline-cell-area .content { -fx-background-color: #23282e; }
+.table-view .inline-cell-area .text { -fx-fill: #edf0f2; }

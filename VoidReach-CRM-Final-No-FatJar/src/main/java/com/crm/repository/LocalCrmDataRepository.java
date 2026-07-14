@@ -39,10 +39,12 @@ public class LocalCrmDataRepository implements CrmDataRepository {
         List<Note> notes = new ArrayList<>();
         List<NoteFolder> noteFolders = new ArrayList<>();
 
+        List<String> customFields = readContactCustomFields(properties, rejected);
+
         for (int index : recordIndexes(properties, "contact.", "contacts.count", rejected)) {
             String prefix = "contact." + index + ".";
             try {
-                contacts.add(readContact(properties, prefix));
+                contacts.add(readContact(properties, prefix, customFields));
             } catch (RuntimeException failure) {
                 rejected.add(CorruptRecordQuarantine.capture(properties, "contact", String.valueOf(index), prefix, failure));
             }
@@ -111,8 +113,28 @@ public class LocalCrmDataRepository implements CrmDataRepository {
             return parsed;
         }, rejected);
 
+        boolean quickEdit = preference(properties, "contacts.quickEdit", false, value -> {
+            if (!"true".equals(value) && !"false".equals(value)) throw new IllegalArgumentException("Invalid quick edit flag");
+            return Boolean.parseBoolean(value);
+        }, rejected);
+
         CorruptRecordQuarantine.writeBestEffort(file, rejected);
-        return new CrmDataSnapshot(contacts, tasks, notes, noteFolders, selectedDate, viewMode, zoom);
+        return new CrmDataSnapshot(contacts, tasks, notes, noteFolders, selectedDate, viewMode, zoom,
+                customFields, quickEdit);
+    }
+
+    private List<String> readContactCustomFields(Properties properties, List<RejectedRecord> rejected) {
+        List<String> fields = new ArrayList<>();
+        for (int index : recordIndexes(properties, "contactCustomField.", "contactCustomFields.count", rejected)) {
+            String key = "contactCustomField." + index + ".name";
+            try {
+                String name = requiredNonBlank(properties, key);
+                if (!fields.contains(name)) fields.add(name);
+            } catch (RuntimeException failure) {
+                rejected.add(CorruptRecordQuarantine.singleProperty("contactCustomField", key, properties.getProperty(key), failure));
+            }
+        }
+        return fields;
     }
 
     @Override public synchronized void saveForUser(String userId, CrmDataSnapshot data) {
@@ -132,6 +154,11 @@ public class LocalCrmDataRepository implements CrmDataRepository {
         Properties properties = new Properties();
         properties.setProperty(AtomicPropertiesStore.SCHEMA_VERSION_KEY, String.valueOf(SCHEMA_VERSION));
         properties.setProperty(AtomicPropertiesStore.FILE_TYPE_KEY, FILE_TYPE);
+        List<String> customFields = data.contactCustomFields();
+        properties.setProperty("contactCustomFields.count", String.valueOf(customFields.size()));
+        for (int i = 0; i < customFields.size(); i++) {
+            put(properties, "contactCustomField." + i + ".name", customFields.get(i));
+        }
         properties.setProperty("contacts.count", String.valueOf(data.contacts().size()));
         for (int i = 0; i < data.contacts().size(); i++) {
             Contact contact = data.contacts().get(i);
@@ -145,6 +172,9 @@ public class LocalCrmDataRepository implements CrmDataRepository {
             put(properties, prefix + "lastInteraction", contact.lastInteractionProperty().get());
             put(properties, prefix + "tags", contact.tagsProperty().get());
             put(properties, prefix + "description", contact.descriptionProperty().get());
+            for (int fieldIndex = 0; fieldIndex < customFields.size(); fieldIndex++) {
+                put(properties, prefix + "custom." + fieldIndex, contact.customFieldValue(customFields.get(fieldIndex)));
+            }
         }
 
         List<Map.Entry<LocalDate, Task>> allTasks = new ArrayList<>();
@@ -196,11 +226,12 @@ public class LocalCrmDataRepository implements CrmDataRepository {
         put(properties, "calendar.selectedDate", data.selectedDate().toString());
         put(properties, "calendar.viewMode", data.calendarViewMode());
         put(properties, "calendar.zoom", String.valueOf(data.calendarZoom()));
+        put(properties, "contacts.quickEdit", String.valueOf(data.contactsQuickEdit()));
         return properties;
     }
 
-    private Contact readContact(Properties properties, String prefix) {
-        return new Contact(
+    private Contact readContact(Properties properties, String prefix, List<String> customFields) {
+        Contact contact = new Contact(
                 requiredNonBlank(properties, prefix + "id"),
                 requiredValue(properties, prefix + "name"),
                 optionalValue(properties, prefix + "company", ""),
@@ -210,6 +241,11 @@ public class LocalCrmDataRepository implements CrmDataRepository {
                 optionalValue(properties, prefix + "lastInteraction", ""),
                 optionalValue(properties, prefix + "tags", ""),
                 optionalValue(properties, prefix + "description", ""));
+        for (int fieldIndex = 0; fieldIndex < customFields.size(); fieldIndex++) {
+            contact.setCustomField(customFields.get(fieldIndex),
+                    optionalValue(properties, prefix + "custom." + fieldIndex, ""));
+        }
+        return contact;
     }
 
     private List<String> readLinkedTaskIds(Properties properties, String prefix) {

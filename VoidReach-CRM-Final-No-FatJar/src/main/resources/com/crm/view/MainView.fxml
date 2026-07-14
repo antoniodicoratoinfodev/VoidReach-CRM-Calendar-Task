@@ -246,13 +246,17 @@
                     </HBox>
 
                     <HBox spacing="10" alignment="CENTER_LEFT" styleClass="toolbar-card">
-                        <TextField fx:id="searchField" promptText="Search by name, company, or email…" styleClass="search-bar" prefWidth="320" HBox.hgrow="ALWAYS"/>
-                        <MenuButton fx:id="contactsSortMenu" text="Sort" styleClass="btn-secondary, sort-menu"/>
+                        <TextField fx:id="searchField" promptText="Search contacts…" styleClass="search-bar" prefWidth="230" maxWidth="320" HBox.hgrow="ALWAYS"/>
+                        <MenuButton fx:id="contactsSortMenu" text="Sort" minWidth="-Infinity" styleClass="btn-secondary, sort-menu"/>
+                        <ToggleButton fx:id="contactsInlineEditToggle" text="Quick edit" minWidth="-Infinity" styleClass="btn-secondary, inline-edit-toggle"/>
+                        <Button fx:id="addFieldBtn" text="Add field" minWidth="-Infinity" styleClass="btn-secondary">
+                            <graphic><FontIcon iconLiteral="fas-plus" iconSize="11" styleClass="toolbar-icon"/></graphic>
+                        </Button>
                         <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
-                        <Label text="Rows" styleClass="control-label"/>
-                        <ComboBox fx:id="rowsPerPageCombo" prefWidth="86"/>
-                        <Button fx:id="selectContactsBtn" onAction="#handleToggleContactSelection" text="Select" styleClass="btn-secondary"/>
-                        <Button fx:id="deleteBtn" onAction="#handleDeleteContact" text="Delete" styleClass="btn-secondary, danger-button"/>
+                        <Label text="Rows" minWidth="-Infinity" styleClass="control-label"/>
+                        <ComboBox fx:id="rowsPerPageCombo" prefWidth="86" minWidth="-Infinity"/>
+                        <Button fx:id="selectContactsBtn" onAction="#handleToggleContactSelection" text="Select" minWidth="-Infinity" styleClass="btn-secondary"/>
+                        <Button fx:id="deleteBtn" onAction="#handleDeleteContact" text="Delete" minWidth="-Infinity" styleClass="btn-secondary, danger-button"/>
                     </HBox>
 
                     <VBox styleClass="data-card" VBox.vgrow="ALWAYS">
@@ -266,6 +270,7 @@
                                 <TableColumn fx:id="phoneColumn" text="Phone" minWidth="110" prefWidth="145"/>
                                 <TableColumn fx:id="lastInteractionColumn" text="Last interaction" minWidth="130" prefWidth="165"/>
                                 <TableColumn fx:id="tagsColumn" text="Tag" minWidth="95" prefWidth="120"/>
+                                <TableColumn fx:id="descriptionColumn" text="Description" minWidth="150" prefWidth="230"/>
                             </columns>
                         </TableView>
                         <HBox spacing="12" alignment="CENTER_LEFT" styleClass="table-footer">

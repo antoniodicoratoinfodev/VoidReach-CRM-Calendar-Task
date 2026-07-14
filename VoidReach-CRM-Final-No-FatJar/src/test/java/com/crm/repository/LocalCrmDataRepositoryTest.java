@@ -67,6 +67,26 @@ class LocalCrmDataRepositoryTest {
         assertEquals("5", load(quarantine).getProperty("records.count"));
     }
 
+    @Test void roundTripsContactCustomFields() {
+        LocalCrmDataRepository repository = new LocalCrmDataRepository(directory);
+        LocalDate date = LocalDate.of(2026, 7, 14);
+        Contact contact = new Contact("contact-custom", "Ada", "VoidReach", "CTO",
+                "ada@example.com", "1", "today", "vip", "long description\nwith a second line");
+        contact.setCustomField("Automobile", "Tesla Model 3");
+        contact.setCustomField("Città", "Bari");
+        repository.saveForUser("account-custom", new CrmDataSnapshot(
+                List.of(contact), new LinkedHashMap<>(), List.of(), List.of(), date, "Day", 1.0,
+                List.of("Automobile", "Città")));
+
+        CrmDataSnapshot loaded = repository.loadForUser("account-custom");
+
+        assertEquals(List.of("Automobile", "Città"), loaded.contactCustomFields());
+        Contact reloaded = loaded.contacts().getFirst();
+        assertEquals("Tesla Model 3", reloaded.customFieldValue("Automobile"));
+        assertEquals("Bari", reloaded.customFieldValue("Città"));
+        assertEquals("long description\nwith a second line", reloaded.descriptionProperty().get());
+    }
+
     @Test void preservesNoteOrderFormatsMarkdownAndTaskLinks() {
         LocalCrmDataRepository repository = new LocalCrmDataRepository(directory);
         LocalDate date = LocalDate.of(2026, 7, 12);

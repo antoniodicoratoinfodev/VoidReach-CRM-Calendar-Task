@@ -2,6 +2,8 @@ package com.crm.model;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class Contact {
@@ -13,6 +15,7 @@ public class Contact {
     private final StringProperty lastInteraction;
     private final StringProperty tags;
     private final StringProperty description;
+    private final Map<String, StringProperty> customFields = new LinkedHashMap<>();
     private final String id;
 
     public Contact(String name, String company, String title, String email, String phone, String lastInteraction, String tags, String description) {
@@ -46,6 +49,28 @@ public class Contact {
     public void setTitle(String value) { this.title.set(value); }
     public void setEmail(String value) { this.email.set(value); }
     public void setPhone(String value) { this.phone.set(value); }
+    public void setLastInteraction(String value) { this.lastInteraction.set(value); }
     public void setTags(String value) { this.tags.set(value); }
     public void setDescription(String value) { this.description.set(value == null ? "" : value); }
+
+    /** Value holder for a user-defined table field; created lazily so bindings survive empty values. */
+    public StringProperty customFieldProperty(String field) {
+        return customFields.computeIfAbsent(field, ignored -> new SimpleStringProperty(""));
+    }
+
+    public String customFieldValue(String field) {
+        StringProperty value = customFields.get(field);
+        return value == null || value.get() == null ? "" : value.get();
+    }
+
+    public void setCustomField(String field, String value) {
+        customFieldProperty(field).set(value == null ? "" : value);
+    }
+
+    public void renameCustomField(String oldField, String newField) {
+        StringProperty value = customFields.remove(oldField);
+        if (value != null) customFields.put(newField, value);
+    }
+
+    public void removeCustomField(String field) { customFields.remove(field); }
 }
