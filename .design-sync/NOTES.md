@@ -1,0 +1,7 @@
+# Design sync — note
+
+- Il repo è un'app **JavaFX** (Maven): il converter standard di /design-sync (React/dist/Storybook) NON è applicabile. La sincronizzazione è **manuale**: si confrontano i CSS JavaFX (`VoidReach-CRM-Final-No-FatJar/src/main/resources/css/`) con i file del progetto Claude Design e si aggiornano via DesignSync.
+- Progetto Claude Design: "VoidReach CRM — Design System" (`6c2a3a1f-61a5-4406-b325-68e42edb7432`), creato a mano: pagine HTML autonome in `components/` e `foundations/` + `tokens/voidreach-tokens.css`. Ogni pagina HTML incorpora una copia dello stesso blocco CSS canonico (token dei 4 temi + componenti); `tokens/voidreach-tokens.css` è la stessa identica copia. Per aggiornare: modificare il CSS canonico una volta e re-iniettarlo in tutte le pagine (segnaposto `/*__CANONICAL__*/`, vedi procedura del 2026-07-17).
+- `_ds_bundle.js` è uno stub vuoto; `_ds_manifest.json` è rigenerato dall'app: non toccarli.
+- Mappatura tema ↔ file CSS: t-light=`style.css`, t-dark=`style-dark.css`, t-bluegray=`style-blue-gray.css`, t-grayblue=`style-gray-blue.css`.
+- 2026-07-17: allineato lo stile "sidebar-button-active" (commit c3a6e4 "selection bar color change"): non più sfondo pieno + bordo sinistro, ma overlay traslucido a due layer (in CSS web: `--side-active-bg` fill + `--side-active-ring` inset ring + `--side-active-icon`). Aggiornate tutte le 11 pagine + tokens al CSS post-2866007 (task-blue, quick-edit `--edit-*`).
