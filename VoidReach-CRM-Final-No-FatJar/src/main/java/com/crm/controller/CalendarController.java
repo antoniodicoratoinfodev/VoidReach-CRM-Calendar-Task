@@ -11,6 +11,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Bounds;
+import javafx.geometry.HPos;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -44,8 +45,7 @@ import java.util.Set;
 /** Owns calendar state, task editing, timeline rendering, zoom, and the calendar sidebar. */
 public final class CalendarController {
     private static final int MINI_CALENDAR_COLUMNS = 7;
-    private static final double MINI_CALENDAR_MIN_CELL_SIZE = 24;
-    private static final double MINI_CALENDAR_MAX_CELL_SIZE = 29;
+    private static final double MINI_CALENDAR_MAX_CELL_SIZE = 40;
     private static final double MINUTE_HEIGHT = 1.0;
     private static final double HOUR_HEIGHT = 60.0;
     private static final double ZOOM_STEP = 0.1;
@@ -127,6 +127,7 @@ public final class CalendarController {
             if (newValue != null) refreshForSelectedDate(newValue);
         });
         installCalendarContentClip();
+        setupMiniCalendarLayout();
         miniCalendarGrid.widthProperty().addListener((observable, oldWidth, newWidth) ->
                 resizeMiniCalendarCells());
         setupViewModeCombo();
@@ -242,6 +243,21 @@ public final class CalendarController {
     public void nextMiniMonth() {
         currentMiniMonth = currentMiniMonth.plusMonths(1);
         updateSidebar();
+    }
+
+    /** Gives weekdays and dates the same responsive column at every agenda width. */
+    private void setupMiniCalendarLayout() {
+        miniCalendarGrid.setMinWidth(0);
+        miniCalendarGrid.setMaxWidth(Double.MAX_VALUE);
+        miniCalendarGrid.getColumnConstraints().clear();
+        for (int column = 0; column < MINI_CALENDAR_COLUMNS; column++) {
+            ColumnConstraints constraints = new ColumnConstraints();
+            constraints.setPercentWidth(100.0 / MINI_CALENDAR_COLUMNS);
+            constraints.setHalignment(HPos.CENTER);
+            constraints.setHgrow(Priority.ALWAYS);
+            constraints.setFillWidth(true);
+            miniCalendarGrid.getColumnConstraints().add(constraints);
+        }
     }
 
     public void today() { selectDate(LocalDate.now()); }
@@ -812,22 +828,36 @@ public final class CalendarController {
         }
     }
 
-    /** Keeps each mini-calendar day square while adapting the seven columns to the available width. */
+    /** Keeps date buttons square while weekday headers expand across the seven equal columns. */
     private void resizeMiniCalendarCells() {
         double gridWidth = miniCalendarGrid.getWidth();
         if (gridWidth <= 0) return;
-        double horizontalGaps = miniCalendarGrid.getHgap() * (MINI_CALENDAR_COLUMNS - 1);
-        double cellSize = clamp((gridWidth - horizontalGaps) / MINI_CALENDAR_COLUMNS,
-                MINI_CALENDAR_MIN_CELL_SIZE, MINI_CALENDAR_MAX_CELL_SIZE);
+        double cellSize = miniCalendarCellSize(gridWidth, miniCalendarGrid.getHgap());
         miniCalendarGrid.getChildren().stream()
                 .filter(node -> node.getStyleClass().contains("calendar-day"))
                 .filter(Region.class::isInstance)
                 .map(Region.class::cast)
                 .forEach(cell -> {
-                    cell.setMinSize(cellSize, cellSize);
-                    cell.setPrefSize(cellSize, cellSize);
-                    cell.setMaxSize(cellSize, cellSize);
+                    GridPane.setHalignment(cell, HPos.CENTER);
+                    boolean weekdayHeader = cell.getStyleClass().contains("calendar-day-header");
+                    if (weekdayHeader) {
+                        cell.setMinSize(0, cellSize);
+                        cell.setPrefSize(cellSize, cellSize);
+                        cell.setMaxSize(Double.MAX_VALUE, cellSize);
+                    } else {
+                        cell.setMinSize(cellSize, cellSize);
+                        cell.setPrefSize(cellSize, cellSize);
+                        cell.setMaxSize(cellSize, cellSize);
+                    }
                 });
+    }
+
+    static double miniCalendarCellSize(double gridWidth, double horizontalGap) {
+        if (!Double.isFinite(gridWidth) || gridWidth <= 0) return 0;
+        double safeGap = Double.isFinite(horizontalGap) ? Math.max(0, horizontalGap) : 0;
+        double totalGaps = safeGap * (MINI_CALENDAR_COLUMNS - 1);
+        double availableCellWidth = Math.max(0, gridWidth - totalGaps) / MINI_CALENDAR_COLUMNS;
+        return Math.min(MINI_CALENDAR_MAX_CELL_SIZE, availableCellWidth);
     }
 
     private void updateSelectedPeriodLabel() {

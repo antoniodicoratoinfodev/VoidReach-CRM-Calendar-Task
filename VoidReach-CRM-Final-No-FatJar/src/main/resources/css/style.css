@@ -753,14 +753,14 @@
 .calendar-day {
     -fx-min-width: 24; -fx-pref-width: 29; -fx-max-width: 29;
     -fx-min-height: 24; -fx-pref-height: 29; -fx-max-height: 29;
-    -fx-background-color: transparent; -fx-background-radius: 15;
+    -fx-background-color: transparent; -fx-background-radius: 999;
     -fx-text-fill: #64748b; -fx-font-size: 10px; -fx-padding: 0;
 }
 .calendar-day:hover { -fx-background-color: #e2e8f0; -fx-text-fill: #0f172a; }
 .calendar-day-header { -fx-text-fill: #94a3b8; -fx-font-size: 9px; -fx-font-weight: 800; }
 .calendar-day-selected { -fx-background-color: #2563eb; -fx-text-fill: #f8fafc; -fx-font-weight: 800; }
 .calendar-day-selected:hover { -fx-background-color: #1d4ed8; -fx-text-fill: #f8fafc; }
-.calendar-day-today { -fx-border-color: #2563eb; -fx-border-radius: 15; -fx-text-fill: #1d4ed8; }
+.calendar-day-today { -fx-border-color: #2563eb; -fx-border-radius: 999; -fx-text-fill: #1d4ed8; }
 .panel-section-title { -fx-text-fill: #334155; -fx-font-size: 12px; -fx-font-weight: 800; }
 .activities-scroll, .activities-scroll > .viewport { -fx-background-color: transparent; -fx-background: transparent; }
 .activity-item {

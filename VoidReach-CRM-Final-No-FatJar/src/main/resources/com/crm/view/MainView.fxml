@@ -552,7 +552,7 @@
                         <graphic><FontIcon iconLiteral="fas-chevron-right" iconSize="10" styleClass="toolbar-icon"/></graphic>
                     </Button>
                 </HBox>
-                <GridPane fx:id="miniCalendarGrid" hgap="3" vgap="3" alignment="CENTER" maxWidth="221"/>
+                <GridPane fx:id="miniCalendarGrid" hgap="3" vgap="3" alignment="CENTER"/>
             </VBox>
 
             <Separator styleClass="panel-separator"/>
