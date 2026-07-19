@@ -66,6 +66,10 @@ public final class ThemeService {
         activeTheme = activeTheme.next();
     }
 
+    public void setTheme(Theme theme) {
+        activeTheme = Objects.requireNonNull(theme);
+    }
+
     public void restore(String storedTheme) {
         try {
             activeTheme = Theme.valueOf(storedTheme);

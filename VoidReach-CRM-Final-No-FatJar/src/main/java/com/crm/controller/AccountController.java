@@ -106,11 +106,11 @@ public final class AccountController {
     public void showMenu() {
         if (currentUser == null) return;
         MenuItem profile = new MenuItem("Profile and account details");
-        profile.setOnAction(event -> showProfileDialog());
+        profile.setOnAction(event -> editProfile());
         MenuItem security = new MenuItem("Security: change password");
-        security.setOnAction(event -> showChangePasswordDialog());
+        security.setOnAction(event -> changePassword());
         MenuItem avatar = new MenuItem("Update profile picture");
-        avatar.setOnAction(event -> chooseAvatar());
+        avatar.setOnAction(event -> updateAvatar());
         MenuItem exportData = new MenuItem("Export data");
         exportData.setOnAction(event -> { if (exportDataAction != null) exportDataAction.run(); });
         MenuItem importData = new MenuItem("Import data");
@@ -120,6 +120,18 @@ public final class AccountController {
         new ContextMenu(profile, security, avatar, new SeparatorMenuItem(),
                 exportData, importData, new SeparatorMenuItem(), logout)
                 .show(accountMenuButton, Side.BOTTOM, 0, 6);
+    }
+
+    public void editProfile() {
+        if (currentUser != null) showProfileDialog();
+    }
+
+    public void changePassword() {
+        if (currentUser != null) showChangePasswordDialog();
+    }
+
+    public void updateAvatar() {
+        if (currentUser != null) chooseAvatar();
     }
 
     public void logout() {

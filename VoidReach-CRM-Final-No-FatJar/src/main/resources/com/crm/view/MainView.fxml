@@ -513,6 +513,133 @@
                     </StackPane>
                 </VBox>
 
+                <ScrollPane fx:id="settingsView" visible="false" fitToWidth="true" hbarPolicy="NEVER"
+                            styleClass="settings-scroll">
+                    <VBox spacing="18" styleClass="settings-view">
+                        <VBox spacing="5">
+                            <Label text="PREFERENCES" styleClass="page-eyebrow"/>
+                            <Label text="Settings" styleClass="section-title"/>
+                            <Label text="Account, appearance, and portable local data." styleClass="section-subtitle"/>
+                        </VBox>
+
+                        <Label text="Account" styleClass="settings-section-title"/>
+                        <VBox spacing="15" styleClass="settings-card">
+                            <HBox alignment="CENTER_LEFT" spacing="14">
+                                <StackPane minWidth="58" prefWidth="58" maxWidth="58"
+                                           minHeight="58" prefHeight="58" maxHeight="58"
+                                           styleClass="settings-avatar-frame">
+                                    <FontIcon fx:id="settingsDefaultAvatarIcon" iconLiteral="fas-user" iconSize="22"
+                                              styleClass="settings-avatar-placeholder"/>
+                                    <ImageView fx:id="settingsAvatarImage" fitWidth="56" fitHeight="56"
+                                               preserveRatio="true" smooth="true" visible="false" managed="false">
+                                        <clip><Circle centerX="28" centerY="28" radius="28"/></clip>
+                                    </ImageView>
+                                </StackPane>
+                                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                                    <Label fx:id="settingsAccountNameLabel" text="Account" styleClass="settings-account-name"/>
+                                    <Label fx:id="settingsAccountEmailLabel" text="" styleClass="settings-account-email"/>
+                                    <Label text="Personal account" styleClass="settings-caption"/>
+                                </VBox>
+                            </HBox>
+                            <FlowPane hgap="10" vgap="10" styleClass="settings-actions">
+                                <Button text="Profile" onAction="#handleSettingsProfile" styleClass="btn-secondary, settings-action-button">
+                                    <graphic><FontIcon iconLiteral="fas-user-edit" iconSize="12" styleClass="toolbar-icon"/></graphic>
+                                </Button>
+                                <Button text="Photo" onAction="#handleSettingsAvatar" styleClass="btn-secondary, settings-action-button">
+                                    <graphic><FontIcon iconLiteral="fas-camera" iconSize="12" styleClass="toolbar-icon"/></graphic>
+                                </Button>
+                                <Button text="Security" onAction="#handleSettingsSecurity" styleClass="btn-secondary, settings-action-button">
+                                    <graphic><FontIcon iconLiteral="fas-lock" iconSize="12" styleClass="toolbar-icon"/></graphic>
+                                </Button>
+                            </FlowPane>
+                        </VBox>
+
+                        <Label text="Appearance" styleClass="settings-section-title"/>
+                        <GridPane hgap="12" vgap="12" styleClass="settings-theme-grid">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="25" hgrow="ALWAYS" fillWidth="true"/>
+                                <ColumnConstraints percentWidth="25" hgrow="ALWAYS" fillWidth="true"/>
+                                <ColumnConstraints percentWidth="25" hgrow="ALWAYS" fillWidth="true"/>
+                                <ColumnConstraints percentWidth="25" hgrow="ALWAYS" fillWidth="true"/>
+                            </columnConstraints>
+                            <Button fx:id="settingsDarkThemeBtn" onAction="#handleSettingsDarkTheme" accessibleText="Use Dark theme"
+                                    maxWidth="1.7976931348623157E308" styleClass="settings-theme-card" GridPane.columnIndex="0">
+                                <graphic><VBox spacing="7" alignment="CENTER_LEFT">
+                                    <FontIcon iconLiteral="fas-moon" iconSize="17" styleClass="settings-theme-icon"/>
+                                    <Label text="Dark" styleClass="settings-theme-title"/>
+                                    <Label fx:id="settingsDarkThemeStatus" text="Active" styleClass="settings-theme-status"/>
+                                </VBox></graphic>
+                            </Button>
+                            <Button fx:id="settingsLightThemeBtn" onAction="#handleSettingsLightTheme" accessibleText="Use Light theme"
+                                    maxWidth="1.7976931348623157E308" styleClass="settings-theme-card" GridPane.columnIndex="1">
+                                <graphic><VBox spacing="7" alignment="CENTER_LEFT">
+                                    <FontIcon iconLiteral="fas-sun" iconSize="17" styleClass="settings-theme-icon"/>
+                                    <Label text="Light" styleClass="settings-theme-title"/>
+                                    <Label fx:id="settingsLightThemeStatus" text="Use theme" styleClass="settings-theme-status"/>
+                                </VBox></graphic>
+                            </Button>
+                            <Button fx:id="settingsBlueGrayThemeBtn" onAction="#handleSettingsBlueGrayTheme" accessibleText="Use Blue-gray theme"
+                                    maxWidth="1.7976931348623157E308" styleClass="settings-theme-card" GridPane.columnIndex="2">
+                                <graphic><VBox spacing="7" alignment="CENTER_LEFT">
+                                    <FontIcon iconLiteral="fas-palette" iconSize="17" styleClass="settings-theme-icon"/>
+                                    <Label text="Blue-gray" styleClass="settings-theme-title"/>
+                                    <Label fx:id="settingsBlueGrayThemeStatus" text="Use theme" styleClass="settings-theme-status"/>
+                                </VBox></graphic>
+                            </Button>
+                            <Button fx:id="settingsGrayBlueThemeBtn" onAction="#handleSettingsGrayBlueTheme" accessibleText="Use Gray Blue theme"
+                                    maxWidth="1.7976931348623157E308" styleClass="settings-theme-card" GridPane.columnIndex="3">
+                                <graphic><VBox spacing="7" alignment="CENTER_LEFT">
+                                    <FontIcon iconLiteral="fas-palette" iconSize="17" styleClass="settings-theme-icon"/>
+                                    <Label text="Gray Blue" styleClass="settings-theme-title"/>
+                                    <Label fx:id="settingsGrayBlueThemeStatus" text="Use theme" styleClass="settings-theme-status"/>
+                                </VBox></graphic>
+                            </Button>
+                        </GridPane>
+
+                        <Label text="Portable data" styleClass="settings-section-title"/>
+                        <VBox spacing="14" styleClass="settings-card">
+                            <HBox alignment="TOP_LEFT" spacing="12">
+                                <StackPane styleClass="settings-feature-icon-wrap">
+                                    <FontIcon iconLiteral="fas-database" iconSize="16" styleClass="settings-feature-icon"/>
+                                </StackPane>
+                                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                    <Label text="Desktop-compatible workspace file" styleClass="settings-card-title"/>
+                                    <Label wrapText="true" styleClass="settings-card-copy"
+                                           text="Export or import the same schema-v1 .properties format used by VoidReach Android. Contacts, custom fields, tasks, notes, folders, and preferences are preserved."/>
+                                </VBox>
+                            </HBox>
+                            <FlowPane hgap="10" vgap="10">
+                                <Button text="Export data" onAction="#handleSettingsExport" styleClass="btn-primary, settings-data-button">
+                                    <graphic><FontIcon iconLiteral="fas-file-export" iconSize="12" styleClass="button-icon-light"/></graphic>
+                                </Button>
+                                <Button text="Import data" onAction="#handleSettingsImport" styleClass="btn-secondary, settings-data-button">
+                                    <graphic><FontIcon iconLiteral="fas-file-import" iconSize="12" styleClass="toolbar-icon"/></graphic>
+                                </Button>
+                            </FlowPane>
+                            <Label wrapText="true" styleClass="settings-warning"
+                                   text="Import replaces the active account workspace after validating the file. Automatic backups keep the previous local state recoverable."/>
+                        </VBox>
+
+                        <Label text="Cloud synchronization" styleClass="settings-section-title"/>
+                        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="settings-card">
+                            <StackPane styleClass="settings-feature-icon-wrap">
+                                <FontIcon iconLiteral="fas-cloud" iconSize="16" styleClass="settings-muted-icon"/>
+                            </StackPane>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="Not enabled" styleClass="settings-card-title"/>
+                                <Label wrapText="true" styleClass="settings-card-copy"
+                                       text="No account or CRM data leaves this device. The storage boundary is ready for a future encrypted synchronization service."/>
+                            </VBox>
+                            <Label text="LOCAL ONLY" styleClass="settings-local-badge"/>
+                        </HBox>
+
+                        <Button text="Sign out" onAction="#handleSettingsSignOut" styleClass="btn-secondary, danger-button, settings-signout">
+                            <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconSize="12" styleClass="settings-danger-icon"/></graphic>
+                        </Button>
+                        <Region minHeight="12"/>
+                    </VBox>
+                </ScrollPane>
+
                 <VBox fx:id="genericView" visible="false" alignment="CENTER" spacing="16" styleClass="generic-view">
                     <StackPane styleClass="empty-icon-wrap">
                         <FontIcon fx:id="genericIcon" iconLiteral="fas-folder-open" iconSize="34" styleClass="empty-icon"/>

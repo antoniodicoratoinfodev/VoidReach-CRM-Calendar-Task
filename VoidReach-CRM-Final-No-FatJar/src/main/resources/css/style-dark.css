@@ -1388,3 +1388,42 @@
 .table-view .inline-cell-area .content { -fx-background-color: #0b1324; -fx-background-radius: 6; }
 .table-view .inline-cell-area .text { -fx-fill: #e2e8f0; }
 .table-view .inline-cell-area .scroll-pane, .table-view .inline-cell-area .viewport { -fx-background-color: transparent; }
+
+/* Settings */
+.settings-scroll, .settings-scroll > .viewport { -fx-background: #0b1120; -fx-background-color: #0b1120; }
+.settings-scroll { -fx-border-color: transparent; -fx-padding: 0; }
+.settings-view { -fx-background-color: #0b1120; -fx-padding: 26 28 24 28; }
+.settings-section-title { -fx-text-fill: #cbd5e1; -fx-font-size: 12px; -fx-font-weight: 800; }
+.settings-card {
+    -fx-background-color: #111a2c; -fx-background-radius: 12;
+    -fx-border-color: #263449; -fx-border-radius: 12; -fx-border-width: 1; -fx-padding: 18;
+}
+.settings-avatar-frame {
+    -fx-background-color: #1e293b; -fx-background-radius: 999;
+    -fx-border-color: #334155; -fx-border-radius: 999; -fx-border-width: 1;
+}
+.settings-avatar-placeholder { -fx-icon-color: #94a3b8; }
+.settings-account-name, .settings-card-title, .settings-theme-title { -fx-text-fill: #f8fafc; -fx-font-size: 13px; -fx-font-weight: 800; }
+.settings-account-email { -fx-text-fill: #cbd5e1; -fx-font-size: 12px; }
+.settings-caption, .settings-card-copy, .settings-theme-status { -fx-text-fill: #94a3b8; -fx-font-size: 11px; }
+.settings-action-button, .settings-data-button { -fx-content-display: LEFT; -fx-graphic-text-gap: 8; }
+.settings-theme-card {
+    -fx-min-height: 104; -fx-pref-height: 104; -fx-background-color: #111a2c; -fx-background-radius: 12;
+    -fx-border-color: #263449; -fx-border-radius: 12; -fx-border-width: 1;
+    -fx-padding: 14; -fx-alignment: CENTER_LEFT; -fx-content-display: GRAPHIC_ONLY; -fx-cursor: hand;
+}
+.settings-theme-card:hover { -fx-background-color: #172033; -fx-border-color: #3b4d67; }
+.settings-theme-card.settings-theme-active { -fx-background-color: rgba(59,130,246,0.12); -fx-border-color: #3b82f6; -fx-border-width: 1.5; }
+.settings-theme-icon { -fx-icon-color: #94a3b8; }
+.settings-theme-active .settings-theme-icon { -fx-icon-color: #60a5fa; }
+.settings-theme-active .settings-theme-status { -fx-text-fill: #60a5fa; -fx-font-weight: 800; }
+.settings-feature-icon-wrap {
+    -fx-min-width: 42; -fx-pref-width: 42; -fx-max-width: 42; -fx-min-height: 42; -fx-pref-height: 42; -fx-max-height: 42;
+    -fx-background-color: #1e293b; -fx-background-radius: 11;
+}
+.settings-feature-icon { -fx-icon-color: #60a5fa; }
+.settings-muted-icon { -fx-icon-color: #94a3b8; }
+.settings-warning { -fx-text-fill: #fbbf24; -fx-font-size: 11px; }
+.settings-local-badge { -fx-background-color: #1e293b; -fx-background-radius: 999; -fx-text-fill: #94a3b8; -fx-font-size: 9px; -fx-font-weight: 800; -fx-padding: 5 8; }
+.settings-signout { -fx-graphic-text-gap: 8; }
+.settings-danger-icon { -fx-icon-color: #fb7185; }

@@ -55,6 +55,16 @@ class ThemeServiceTest {
     }
 
     @Test
+    void selectsASpecificThemeFromSettings() {
+        ThemeService service = new ThemeService(() -> null);
+
+        service.setTheme(ThemeService.Theme.GRAY_BLUE);
+
+        assertEquals(ThemeService.Theme.GRAY_BLUE, service.activeTheme());
+        assertTrue(service.isGrayBlueTheme());
+    }
+
+    @Test
     void themeStylesheetsArePackagedAndValid() throws IOException {
         for (String resource : new String[]{"/css/style.css", "/css/style-dark.css",
                 "/css/style-blue-gray.css", "/css/style-gray-blue.css"}) {

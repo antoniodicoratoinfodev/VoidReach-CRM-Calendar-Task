@@ -89,6 +89,7 @@ public final class MainController {
     @FXML private VBox calendarView;
     @FXML private VBox tasksView;
     @FXML private VBox notesView;
+    @FXML private ScrollPane settingsView;
     @FXML private VBox genericView;
     @FXML private Label genericTitle;
     @FXML private FontIcon genericIcon;
@@ -105,6 +106,18 @@ public final class MainController {
     @FXML private Button accountMenuButton;
     @FXML private FontIcon defaultAvatarIcon;
     @FXML private ImageView avatarImage;
+    @FXML private Label settingsAccountNameLabel;
+    @FXML private Label settingsAccountEmailLabel;
+    @FXML private FontIcon settingsDefaultAvatarIcon;
+    @FXML private ImageView settingsAvatarImage;
+    @FXML private Button settingsDarkThemeBtn;
+    @FXML private Button settingsLightThemeBtn;
+    @FXML private Button settingsBlueGrayThemeBtn;
+    @FXML private Button settingsGrayBlueThemeBtn;
+    @FXML private Label settingsDarkThemeStatus;
+    @FXML private Label settingsLightThemeStatus;
+    @FXML private Label settingsBlueGrayThemeStatus;
+    @FXML private Label settingsGrayBlueThemeStatus;
 
     @FXML private AnchorPane timeLabelsContainer;
     @FXML private AnchorPane calendarTimelineArea;
@@ -202,7 +215,7 @@ public final class MainController {
         dialogService = new DialogService(themeService);
         initializeResizableSidebars();
         navigationController = new NavigationController(homeView, dashboardView,
-                contactsView, calendarView, tasksView, notesView, genericView,
+                contactsView, calendarView, tasksView, notesView, settingsView, genericView,
                 genericTitle, genericIcon, sidebarContainer);
         overviewController = new OverviewController(
                 homeGreetingLabel, homeDateLabel,
@@ -271,6 +284,7 @@ public final class MainController {
         accountController = new AccountController(currentUserLabel, accountMenuButton,
                 defaultAvatarIcon, avatarImage, themeService, dialogService);
         accountController.setDataTransferActions(this::exportData, this::importData);
+        bindSettingsAccountPresentation();
 
         navigationController.initialize();
         contactsController.initialize();
@@ -291,6 +305,7 @@ public final class MainController {
                                BufferedImage preloadedAvatar, int preloadedPixelSize) {
         this.currentUser = user;
         this.logoutAction = logoutAction;
+        settingsAccountEmailLabel.setText(user.getEmail());
         themeService.restore(user.getPreferredTheme());
         themeService.applyTo(themeToggleBtn.getScene());
         updateThemeButton();
@@ -465,6 +480,21 @@ public final class MainController {
 
     @FXML private void handleAccountMenu() { accountController.showMenu(); }
     @FXML private void handleNavigation(ActionEvent event) { navigationController.navigate(event); }
+    @FXML private void handleSettingsProfile() { accountController.editProfile(); }
+    @FXML private void handleSettingsAvatar() { accountController.updateAvatar(); }
+    @FXML private void handleSettingsSecurity() { accountController.changePassword(); }
+    @FXML private void handleSettingsExport() { exportData(); }
+    @FXML private void handleSettingsImport() { importData(); }
+    @FXML private void handleSettingsSignOut() {
+        if (dialogService.confirmWarning("Sign out?",
+                "Pending changes will be saved before the session closes.", "Sign out")) {
+            accountController.logout();
+        }
+    }
+    @FXML private void handleSettingsDarkTheme() { applyTheme(ThemeService.Theme.DARK); }
+    @FXML private void handleSettingsLightTheme() { applyTheme(ThemeService.Theme.LIGHT); }
+    @FXML private void handleSettingsBlueGrayTheme() { applyTheme(ThemeService.Theme.BLUE_GRAY); }
+    @FXML private void handleSettingsGrayBlueTheme() { applyTheme(ThemeService.Theme.GRAY_BLUE); }
     @FXML private void handleAddContact() { contactsController.addContact(); }
     @FXML private void handleAddTask() { calendarController.createTask(LocalDate.now()); }
     @FXML private void handleAddNote() { notesController.createNote(); }
@@ -737,6 +767,16 @@ public final class MainController {
     @FXML
     private void handleThemeToggle() {
         themeService.toggle();
+        applyActiveTheme();
+    }
+
+    private void applyTheme(ThemeService.Theme theme) {
+        if (themeService.activeTheme() == theme) return;
+        themeService.setTheme(theme);
+        applyActiveTheme();
+    }
+
+    private void applyActiveTheme() {
         themeService.applyTo(themeToggleBtn.getScene());
         updateThemeButton();
         calendarController.refreshTheme();
@@ -756,5 +796,25 @@ public final class MainController {
                 ? "fas-palette"
                 : themeService.isDarkMode() ? "fas-sun" : "fas-moon");
         themeToggleBtn.setText("Theme: " + themeService.activeTheme().displayName());
+        updateThemeCard(settingsDarkThemeBtn, settingsDarkThemeStatus, ThemeService.Theme.DARK);
+        updateThemeCard(settingsLightThemeBtn, settingsLightThemeStatus, ThemeService.Theme.LIGHT);
+        updateThemeCard(settingsBlueGrayThemeBtn, settingsBlueGrayThemeStatus, ThemeService.Theme.BLUE_GRAY);
+        updateThemeCard(settingsGrayBlueThemeBtn, settingsGrayBlueThemeStatus, ThemeService.Theme.GRAY_BLUE);
+    }
+
+    private void updateThemeCard(Button card, Label status, ThemeService.Theme theme) {
+        boolean selected = themeService.activeTheme() == theme;
+        card.getStyleClass().remove("settings-theme-active");
+        if (selected) card.getStyleClass().add("settings-theme-active");
+        status.setText(selected ? "Active" : "Use theme");
+    }
+
+    private void bindSettingsAccountPresentation() {
+        settingsAccountNameLabel.textProperty().bind(currentUserLabel.textProperty());
+        settingsAvatarImage.imageProperty().bind(avatarImage.imageProperty());
+        settingsAvatarImage.visibleProperty().bind(avatarImage.visibleProperty());
+        settingsAvatarImage.managedProperty().bind(avatarImage.managedProperty());
+        settingsDefaultAvatarIcon.visibleProperty().bind(defaultAvatarIcon.visibleProperty());
+        settingsDefaultAvatarIcon.managedProperty().bind(defaultAvatarIcon.managedProperty());
     }
 }

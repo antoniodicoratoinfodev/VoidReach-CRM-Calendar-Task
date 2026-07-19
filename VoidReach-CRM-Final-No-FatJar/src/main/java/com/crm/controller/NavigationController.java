@@ -17,13 +17,15 @@ public final class NavigationController {
     private final VBox calendarView;
     private final VBox tasksView;
     private final VBox notesView;
+    private final Node settingsView;
     private final VBox genericView;
     private final Label genericTitle;
     private final FontIcon genericIcon;
     private final VBox sidebarContainer;
 
     public NavigationController(Node homeView, Node dashboardView,
-                                VBox contactsView, VBox calendarView, VBox tasksView, VBox notesView, VBox genericView,
+                                VBox contactsView, VBox calendarView, VBox tasksView, VBox notesView,
+                                Node settingsView, VBox genericView,
                                 Label genericTitle, FontIcon genericIcon, VBox sidebarContainer) {
         this.homeView = Objects.requireNonNull(homeView);
         this.dashboardView = Objects.requireNonNull(dashboardView);
@@ -31,6 +33,7 @@ public final class NavigationController {
         this.calendarView = Objects.requireNonNull(calendarView);
         this.tasksView = Objects.requireNonNull(tasksView);
         this.notesView = Objects.requireNonNull(notesView);
+        this.settingsView = Objects.requireNonNull(settingsView);
         this.genericView = Objects.requireNonNull(genericView);
         this.genericTitle = Objects.requireNonNull(genericTitle);
         this.genericIcon = Objects.requireNonNull(genericIcon);
@@ -44,6 +47,7 @@ public final class NavigationController {
         bindManagedToVisible(calendarView);
         bindManagedToVisible(tasksView);
         bindManagedToVisible(notesView);
+        bindManagedToVisible(settingsView);
         bindManagedToVisible(genericView);
     }
 
@@ -58,6 +62,7 @@ public final class NavigationController {
         else if (id.contains("Calendar")) calendarView.setVisible(true);
         else if (id.contains("Tasks")) tasksView.setVisible(true);
         else if (id.contains("Notes")) notesView.setVisible(true);
+        else if (id.contains("Settings")) settingsView.setVisible(true);
         else showPlaceholder(id);
     }
 
@@ -96,12 +101,13 @@ public final class NavigationController {
         calendarView.setVisible(false);
         tasksView.setVisible(false);
         notesView.setVisible(false);
+        settingsView.setVisible(false);
         genericView.setVisible(false);
     }
 
     private void showPlaceholder(String id) {
         genericView.setVisible(true);
-        if (id.contains("Settings")) setPlaceholder("Settings", "fas-cog");
+        setPlaceholder("Section", "fas-folder-open");
     }
 
     private void setPlaceholder(String title, String icon) {

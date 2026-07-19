@@ -243,3 +243,15 @@
 }
 .table-view .inline-cell-area .content { -fx-background-color: #23282e; }
 .table-view .inline-cell-area .text { -fx-fill: #edf0f2; }
+
+/* Settings */
+.settings-scroll, .settings-scroll > .viewport, .settings-view { -fx-background: #252a30; -fx-background-color: #252a30; }
+.settings-card, .settings-theme-card { -fx-background-color: #30363d; -fx-border-color: #4a535d; }
+.settings-theme-card:hover { -fx-background-color: #39414a; -fx-border-color: #606d79; }
+.settings-theme-card.settings-theme-active { -fx-background-color: #3b4652; -fx-border-color: #6f95bd; }
+.settings-feature-icon-wrap, .settings-avatar-frame, .settings-local-badge { -fx-background-color: #3b434c; -fx-border-color: #4a535d; }
+.settings-section-title, .settings-account-name, .settings-card-title, .settings-theme-title { -fx-text-fill: #f1f3f5; }
+.settings-account-email { -fx-text-fill: #d9dde1; }
+.settings-caption, .settings-card-copy, .settings-theme-status, .settings-local-badge { -fx-text-fill: #aeb5bc; }
+.settings-theme-active .settings-theme-icon, .settings-feature-icon { -fx-icon-color: #8badcf; }
+.settings-theme-active .settings-theme-status { -fx-text-fill: #8badcf; }
